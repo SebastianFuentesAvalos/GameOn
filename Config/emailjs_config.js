@@ -78,9 +78,9 @@ function initEmailJS() {
 async function enviarEmailRecuperacion(emailData) {
     try {
         // Validar configuración
-        if (EMAILJS_CONFIG.publicKey === 'Kg-QrgkrkkcEyD0MZ' || 
-            EMAILJS_CONFIG.serviceID === 'service_gameon' || 
-            EMAILJS_CONFIG.templateID === 'template_password_recove') {
+        if (EMAILJS_CONFIG.publicKey === 'TU_PUBLIC_KEY_AQUI' || 
+            EMAILJS_CONFIG.serviceID === 'TU_SERVICE_ID_AQUI' || 
+            EMAILJS_CONFIG.templateID === 'TU_TEMPLATE_ID_AQUI') {
             throw new Error('EmailJS no está configurado. Por favor, actualiza las credenciales en emailjs_config.js');
         }
 
