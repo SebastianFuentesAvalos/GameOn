@@ -397,8 +397,95 @@ class InsDeporManager {
     }
     
     verCronograma(id) {
-        console.log('Ver cronograma de instalación:', id);
-        this.mostrarModal('Cronograma', 'Cargando cronograma...');
+        // Mostrar loading
+        this.mostrarModal('Áreas Deportivas', '<div class="loading"><i class="fas fa-futbol"></i> Cargando áreas deportivas...</div>');
+
+        // Obtener deportes para filtro
+        fetch(`../../Controllers/AreasDeportivasController.php?action=obtener_areas_institucion&sede_id=${id}`)
+            .then(res => res.json())
+            .then(data => {
+                if (!data.success) {
+                    this.mostrarModal('Áreas Deportivas', '<div class="text-danger">No se pudieron cargar las áreas deportivas.</div>');
+                    return;
+                }
+                const areas = data.areas;
+                if (!areas.length) {
+                    this.mostrarModal('Áreas Deportivas', '<div class="text-warning">No hay áreas deportivas registradas.</div>');
+                    return;
+                }
+
+                // Obtener deportes únicos para filtro
+                const deportesUnicos = [];
+                areas.forEach(a => {
+                    if (!deportesUnicos.find(d => d.id == a.deporte_id)) {
+                        deportesUnicos.push({ id: a.deporte_id, nombre: a.deporte_nombre });
+                    }
+                });
+
+                // Renderizar filtro y galería
+                let html = `
+                    <div style="margin-bottom:16px;">
+                        <label for="filtro-area-deporte"><i class="fas fa-filter"></i> Filtrar por deporte:</label>
+                        <select id="filtro-area-deporte" style="margin-left:8px; padding:4px 8px; border-radius:6px;">
+                            <option value="">Todos</option>
+                            ${deportesUnicos.map(d => `<option value="${d.id}">${d.nombre}</option>`).join('')}
+                        </select>
+                    </div>
+                    <div id="galeria-areas" style="display:flex; flex-wrap:wrap; gap:18px; justify-content:center;">
+                        ${areas.map(area => renderAreaCard(area)).join('')}
+                    </div>
+                `;
+                this.mostrarModal('Áreas Deportivas', html);
+
+                // Filtro por deporte
+                document.getElementById('filtro-area-deporte').addEventListener('change', function() {
+                    const val = this.value;
+                    const cards = document.querySelectorAll('.area-card');
+                    cards.forEach(card => {
+                        if (!val || card.getAttribute('data-deporte') == val) {
+                            card.style.display = '';
+                        } else {
+                            card.style.display = 'none';
+                        }
+                    });
+                });
+
+                setTimeout(() => {
+                    document.querySelectorAll('.btn-reservar-area').forEach(btn => {
+                        btn.addEventListener('click', function() {
+                            const areaId = this.getAttribute('data-area-id');
+                            const areaNombre = this.getAttribute('data-area-nombre');
+                            window.location.href = `reservar_area.php?area_id=${areaId}&area_nombre=${areaNombre}`;
+                        });
+                    });
+                }, 100);
+            });
+
+        // Función para renderizar cada área
+        function renderAreaCard(area) {
+            const img = area.imagen_area ? area.imagen_area : '../../Resources/default_area.jpg';
+            return `
+            <div class="area-card" data-deporte="${area.deporte_id}" style="background:#23272b; border-radius:12px; box-shadow:0 2px 8px #0004; width:320px; overflow:hidden; display:flex; flex-direction:column;">
+                <div style="height:160px; background:#111;">
+                    <img src="${img}" alt="${area.nombre_area}" style="width:100%; height:100%; object-fit:cover;" onerror="this.src='../../Resources/default_area.jpg'">
+                </div>
+                <div style="padding:14px 16px; flex:1; display:flex; flex-direction:column; gap:6px;">
+                    <h4 style="margin:0; color:#00bcd4; font-size:18px;">${area.nombre_area}</h4>
+                    <div style="font-size:13px; color:#b0b0b0;"><i class="fas fa-running"></i> ${area.deporte_nombre}</div>
+                    <div style="font-size:13px; color:#b0b0b0;"><i class="fas fa-users"></i> Capacidad: ${area.capacidad_jugadores ?? '-'}</div>
+                    <div style="font-size:13px; color:#b0b0b0;"><i class="fas fa-money-bill-wave"></i> Tarifa: S/. ${parseFloat(area.tarifa_por_hora).toFixed(2)}</div>
+                    <div style="font-size:13px; color:#b0b0b0;"><i class="fas fa-info-circle"></i> Estado: <span style="color:${area.estado=='activa'?'#25D366':'#ffc107'}">${area.estado}</span></div>
+                    <div style="font-size:13px; color:#b0b0b0;"><i class="fas fa-align-left"></i> ${area.descripcion ?? ''}</div>
+                    <button class="btn btn-primary btn-reservar-area" 
+    data-area-id="${area.id}" 
+    data-area-nombre="${encodeURIComponent(area.nombre_area)}"
+    style="margin-top:10px;">
+    <i class="fas fa-calendar-plus"></i> ¡RESERVAR AHORA!
+</button>
+                </div>
+            </div>
+            `;
+        }
     }
     
     verComentarios(id) {
@@ -462,7 +549,9 @@ document.addEventListener('DOMContentLoaded', function() {
         if (e.target.closest('.btn-cronograma')) {
             const btn = e.target.closest('.btn-cronograma');
             const instalacionId = btn.getAttribute('data-id');
-            mostrarCronograma(instalacionId);
+            if (window.insDeporManager) {
+                window.insDeporManager.verCronograma(instalacionId);
+            }
         }
         
         // Botón de mapa

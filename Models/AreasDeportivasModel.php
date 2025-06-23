@@ -447,13 +447,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' || $_SERVER['REQUEST_METHOD'] === 'GET
     }
     
     // Acciones que no requieren autenticación específica
-    $publicActions = ['verificar_disponibilidad_torneo', 'verificar_y_reservar_automatico'];
+    $publicActions = ['verificar_disponibilidad_torneo', 'verificar_y_reservar_automatico', 'obtener_areas_institucion', 'get_area_cronograma', 'get_area'];
     
     if (in_array($action, $publicActions)) {
         $requireAuth = false;
     }
     
-    if ($requireAuth && (!isset($_SESSION['user_id']) || $_SESSION['user_type'] !== 'instalacion')) {
+    if ($requireAuth && !in_array($action, $publicActions) && (!isset($_SESSION['user_id']) || $_SESSION['user_type'] !== 'instalacion')) {
         header('Content-Type: application/json');
         echo json_encode(['success' => false, 'message' => 'No autorizado']);
         exit;
@@ -486,6 +486,17 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' || $_SERVER['REQUEST_METHOD'] === 'GET
                     $horarios = $model->getHorariosArea($areaId);
                     header('Content-Type: application/json');
                     echo json_encode(['success' => true, 'data' => $horarios]);
+                } else {
+                    header('Content-Type: application/json');
+                    echo json_encode(['success' => false, 'message' => 'ID requerido']);
+                }
+                exit;
+            } elseif ($_GET['action'] === 'obtener_areas_institucion') {
+                $sedeId = $_GET['sede_id'] ?? null;
+                if ($sedeId) {
+                    $areas = $model->getAreasByInstitucion($sedeId);
+                    header('Content-Type: application/json');
+                    echo json_encode(['success' => true, 'areas' => $areas]);
                 } else {
                     header('Content-Type: application/json');
                     echo json_encode(['success' => false, 'message' => 'ID requerido']);

@@ -32,6 +32,9 @@ class ReservaController {
                 case 'reservas_institucion':
                     $this->obtenerReservasInstitucion();
                     break;
+                case 'get_cronograma_publico':
+                    $this->obtenerCronogramaPublico();
+                    break;
                 default:
                     $this->sendError('Acción no válida');
                     break;
@@ -252,6 +255,39 @@ class ReservaController {
         ]);
         exit;
     }
+
+    // ✅ NUEVO: Obtener cronograma público
+    private function obtenerCronogramaPublico() {
+        try {
+            $areaId = intval($_GET['area_id'] ?? 0);
+            $fecha = $_GET['fecha'] ?? date('Y-m-d');
+            $cronogramaData = $this->reservaModel->obtenerCronogramaAreaDeportiva($areaId, $fecha);
+
+            if ($cronogramaData && isset($cronogramaData['cronograma'])) {
+                // SIEMPRE responde success, aunque el cronograma esté vacío
+                $this->sendSuccess(['cronograma' => $cronogramaData['cronograma']]);
+            } else if ($cronogramaData && isset($cronogramaData['cerrado']) && $cronogramaData['cerrado']) {
+                // Si está cerrado, responde success pero con cronograma vacío
+                $this->sendSuccess(['cronograma' => []]);
+            } else {
+                $this->sendError('No se pudo cargar el cronograma.');
+            }
+        } catch (Exception $e) {
+            $this->sendError('Error: ' . $e->getMessage());
+        }
+    }
+}
+
+// NUEVO ENDPOINT: Cronograma público para reservar_area.php
+if ($_SERVER['REQUEST_METHOD'] === 'GET' && ($_GET['action'] ?? '') === 'get_cronograma_publico') {
+    require_once __DIR__ . '/../Models/ReservaModel.php';
+    $areaId = intval($_GET['area_id'] ?? 0);
+    $fecha = $_GET['fecha'] ?? date('Y-m-d');
+    $model = new ReservaModel();
+    $bloques = $model->getCronogramaPublicoArea($areaId, $fecha);
+    header('Content-Type: application/json');
+    echo json_encode(['success' => true, 'cronograma' => $bloques]);
+    exit;
 }
 
 $controller = new ReservaController();

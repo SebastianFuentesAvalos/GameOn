@@ -159,7 +159,7 @@ include_once 'header.php';
                                     </button>
                                     
                                     <button class="action-btn btn-cronograma" data-id="<?= $instalacion['id'] ?>">
-                                        <i class="fas fa-calendar"></i> Cronograma
+                                        <i class="fas fa-calendar"></i> Áreas Deportivas
                                     </button>
                                     
                                     <button class="action-btn btn-mapa" 

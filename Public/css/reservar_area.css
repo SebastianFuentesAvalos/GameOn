@@ -1,0 +1,231 @@
+/* Variables para theme oscuro */
+:root {
+    --primary-color: #1ec98c;
+    --secondary-color: #00bcd4;
+    --dark-bg: #1e1e1e;
+    --card-bg: #23272f;
+    --text-light: #fff;
+    --text-secondary: #b6eaff;
+    --border-radius: 16px;
+    --shadow: 0 8px 32px #0007;
+    --spacing: 24px;
+}
+
+/* Contenedor principal grande y centrado */
+.reserva-area-main {
+    max-width: 900px;
+    margin: 48px auto 48px auto;
+    background: var(--card-bg);
+    border-radius: var(--border-radius);
+    box-shadow: var(--shadow);
+    padding: 48px 48px 36px 48px;
+    color: var(--text-light);
+    min-height: 70vh;
+}
+
+.reserva-area-header h2 {
+    font-size: 2.2em;
+    color: var(--primary-color);
+    margin-bottom: 12px;
+    display: flex;
+    align-items: center;
+    gap: 14px;
+}
+.area-info {
+    font-size: 1.2em;
+    color: var(--text-secondary);
+    margin-bottom: 10px;
+    display: flex;
+    gap: 18px;
+}
+.reserva-area-filtros {
+    margin-bottom: 28px;
+    display: flex;
+    align-items: center;
+    gap: 14px;
+}
+.reserva-area-filtros label {
+    font-weight: 600;
+    color: var(--secondary-color);
+    font-size: 1.1em;
+}
+.reserva-area-filtros input[type="date"] {
+    background: #222;
+    color: #fff;
+    border: 2px solid var(--secondary-color);
+    border-radius: 8px;
+    padding: 10px 16px;
+    font-size: 1.1em;
+    outline: none;
+    transition: border 0.2s;
+}
+.reserva-area-filtros input[type="date"]:focus {
+    border-color: var(--primary-color);
+}
+
+/* Botón volver */
+.btn-volver {
+    display: inline-flex;
+    align-items: center;
+    gap: 10px;
+    background: linear-gradient(135deg, #444950, #23272f);
+    color: #fff;
+    border: none;
+    border-radius: 10px;
+    padding: 12px 28px;
+    font-size: 1.1em;
+    font-weight: 600;
+    margin-bottom: 32px;
+    cursor: pointer;
+    transition: background 0.2s, color 0.2s;
+    text-decoration: none;
+}
+.btn-volver:hover {
+    background: linear-gradient(135deg, #23272f, #444950);
+    color: var(--primary-color);
+}
+
+/* Grid de horarios más grande */
+.reserva-area-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 22px;
+    min-height: 160px;
+}
+.horario-bloque {
+    padding: 22px 0;
+    border-radius: 10px;
+    text-align: center;
+    font-weight: 600;
+    font-size: 1.15em;
+    cursor: pointer;
+    background: #2e3440;
+    border: 2px solid #2e3440;
+    transition: background 0.2s, border 0.2s, color 0.2s, transform 0.15s;
+    user-select: none;
+    box-shadow: 0 2px 8px #0003;
+}
+.horario-bloque.disponible {
+    background: var(--primary-color);
+    color: #fff;
+    border-color: var(--primary-color);
+}
+.horario-bloque.ocupado {
+    background: #444950;
+    color: #b0b0b0;
+    border-color: #444950;
+    cursor: not-allowed;
+    text-decoration: line-through;
+}
+.horario-bloque.seleccionado {
+    background: var(--secondary-color);
+    color: #fff;
+    border-color: var(--secondary-color);
+    transform: scale(1.05);
+}
+.loading-horarios {
+    grid-column: 1/-1;
+    text-align: center;
+    color: var(--secondary-color);
+    font-size: 1.2em;
+    padding: 32px 0;
+}
+
+/* Modal de confirmación */
+.modal-reserva {
+    position: fixed;
+    top: 0; left: 0; right: 0; bottom: 0;
+    background: #000a;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 1000;
+}
+.modal-reserva-content {
+    background: var(--card-bg);
+    border-radius: 14px;
+    padding: 40px 36px;
+    color: #fff;
+    min-width: 340px;
+    box-shadow: 0 8px 32px #0008;
+    text-align: center;
+}
+.modal-reserva-actions {
+    margin-top: 28px;
+    display: flex;
+    gap: 24px;
+    justify-content: center;
+}
+.btn {
+    padding: 12px 32px;
+    border-radius: 8px;
+    border: none;
+    font-weight: 700;
+    font-size: 1.1em;
+    cursor: pointer;
+    transition: background 0.2s, color 0.2s;
+}
+.btn-primary {
+    background: var(--primary-color);
+    color: #fff;
+}
+.btn-primary:hover {
+    background: #17a673;
+}
+.btn-secondary {
+    background: #444950;
+    color: #fff;
+}
+.btn-secondary:hover {
+    background: #23272f;
+}
+
+/* Nueva sección de tarifas y pago */
+.tarifa-info, .monto-info {
+    margin-left: 18px;
+    font-size: 1.08em;
+    color: var(--primary-color);
+    font-weight: 600;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+.monto-info {
+    color: var(--secondary-color);
+    margin-left: 28px;
+}
+.pago-culqi-zone {
+    margin-top: 36px;
+    text-align: right;
+}
+#btnPagarCulqi {
+    font-size: 1.15em;
+    padding: 14px 38px;
+    border-radius: 10px;
+    background: #ff7300 !important;
+    color: #fff !important;
+    border: none;
+    box-shadow: 0 2px 8px #0002;
+    transition: background 0.2s, color 0.2s;
+}
+#btnPagarCulqi:hover {
+    background: #ff9500 !important;
+    color: #fff !important;
+}
+
+/* Responsive */
+@media (max-width: 900px) {
+    .reserva-area-main { padding: 18px 4vw; }
+}
+@media (max-width: 700px) {
+    .reserva-area-main { padding: 8px 2vw; }
+    .reserva-area-header h2 { font-size: 1.3em; }
+    .reserva-area-grid { grid-template-columns: repeat(2, 1fr); }
+    .modal-reserva-content { min-width: 90vw; }
+}
+@media (max-width: 480px) {
+    .reserva-area-main { padding: 2vw 2vw; }
+    .reserva-area-header h2 { font-size: 1.1em; }
+    .btn-volver { font-size: 1em; padding: 10px 12px; }
+    .modal-reserva-content { padding: 18px 4vw; }
+}

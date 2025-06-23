@@ -274,12 +274,86 @@ class ReservaModel {
         return false;
     }
 
-    private function obtenerNombreDia($fecha) {
+    /**
+     * Cronograma completo: bloques de 30 minutos, ocupados por reservas y partidos de torneo
+     */
+    public function getCronogramaPublicoArea($areaId, $fecha) {
+        // 1. Obtener horario de apertura/cierre para ese día
+        $diaSemana = $this->obtenerNombreDia($fecha);
+        $sql = "SELECT hora_apertura, hora_cierre FROM areas_horarios 
+                WHERE area_deportiva_id = ? AND dia = ? AND disponible = 1";
+        $stmt = $this->conn->prepare($sql);
+        $stmt->bind_param("is", $areaId, $diaSemana);
+        $stmt->execute();
+        $horario = $stmt->get_result()->fetch_assoc();
+
+        if (!$horario) {
+            return [];
+        }
+
+        // 2. Obtener reservas de ese día
+        $sqlR = "SELECT hora_inicio, hora_fin FROM reservas 
+                 WHERE area_deportiva_id = ? AND fecha = ? AND estado != 'cancelada'";
+        $stmtR = $this->conn->prepare($sqlR);
+        $stmtR->bind_param("is", $areaId, $fecha);
+        $stmtR->execute();
+        $reservas = $stmtR->get_result()->fetch_all(MYSQLI_ASSOC);
+
+        // 3. Obtener partidos de torneo de ese día (cada partido ocupa 1 hora)
+        $sqlT = "SELECT TIME(fecha_partido) as hora_inicio 
+                 FROM torneos_partidos 
+                 WHERE area_deportiva_id = ? AND DATE(fecha_partido) = ? AND estado_partido IN ('programado','en_curso')";
+        $stmtT = $this->conn->prepare($sqlT);
+        $stmtT->bind_param("is", $areaId, $fecha);
+        $stmtT->execute();
+        $torneos = $stmtT->get_result()->fetch_all(MYSQLI_ASSOC);
+
+        foreach ($torneos as $t) {
+            $hIni = $t['hora_inicio'];
+            $hFin = date('H:i:s', strtotime($hIni) + 3600);
+            $reservas[] = ['hora_inicio' => $hIni, 'hora_fin' => $hFin];
+        }
+
+        // 4. Generar bloques de 30 minutos
+        $bloques = [];
+        $hIni = new DateTime($horario['hora_apertura']);
+        $hFin = new DateTime($horario['hora_cierre']);
+        $intervalo = new DateInterval('PT30M');
+
+        while ($hIni < $hFin) {
+            $hSig = (clone $hIni)->add($intervalo);
+            if ($hSig > $hFin) $hSig = $hFin;
+
+            // ¿Está ocupado?
+            $ocupado = false;
+            foreach ($reservas as $r) {
+                if (
+                    ($hIni->format('H:i:s') < $r['hora_fin']) &&
+                    ($hSig->format('H:i:s') > $r['hora_inicio'])
+                ) {
+                    $ocupado = true;
+                    break;
+                }
+            }
+            $bloques[] = [
+                'hora_inicio' => $hIni->format('H:i'),
+                'hora_fin' => $hSig->format('H:i'),
+                'disponible' => !$ocupado,
+                'estado' => $ocupado ? 'ocupado' : 'disponible'
+            ];
+            $hIni = $hSig;
+        }
+        return $bloques;
+    }
+
+    /**
+     * Día de la semana en español
+     */
+    public function obtenerNombreDia($fecha) {
         $dias = [
             'Monday' => 'Lunes', 'Tuesday' => 'Martes', 'Wednesday' => 'Miercoles',
             'Thursday' => 'Jueves', 'Friday' => 'Viernes', 'Saturday' => 'Sabado', 'Sunday' => 'Domingo'
         ];
-        
         $nombreIngles = date('l', strtotime($fecha));
         return $dias[$nombreIngles] ?? $nombreIngles;
     }
@@ -400,4 +474,6 @@ class ReservaModel {
     return $result->fetch_all(MYSQLI_ASSOC);
 }
 }
+
+$publicActions = ['verificar_disponibilidad_torneo', 'verificar_y_reservar_automatico', 'getCronograma', 'get_cronograma_publico'];
 ?>

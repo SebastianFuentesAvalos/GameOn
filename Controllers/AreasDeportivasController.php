@@ -65,6 +65,11 @@ class AreasDeportivasController {
         $reservaModel = new ReservaModel();
         return $reservaModel->obtenerCronogramaAreaDeportiva($areaId, $fecha);
     }
+
+    // Permitir obtener un área deportiva por ID (para reservar_area.php)
+    public function getAreaById($id) {
+        return $this->areasModel->getAreaById($id);
+    }
 }
 
 // ✅ MANEJO AJAX para obtener áreas por sede
