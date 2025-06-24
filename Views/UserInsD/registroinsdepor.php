@@ -4,6 +4,7 @@
   <meta charset="UTF-8">
   <title>Registro - Institución Deportiva</title>
   <link rel="stylesheet" href="../../Public/css/styles_registroinsdepor.css">
+  <script src="https://static.filestackapi.com/filestack-js/3.x.x/filestack.min.js"></script>
 </head>
 <body class="auth-page">
   <div class="auth-container dual-column">
@@ -33,7 +34,7 @@
         <h2>Registro de Institución Deportiva</h2>
       </div>
       <div class="auth-body">
-        <form action="procesar_registroinsdepor.php" method="POST" enctype="multipart/form-data">
+        <form action="procesar_registroinsdepor.php" method="POST">
           <div class="form-group">
             <label for="nombre">Nombre de la Institución</label>
             <input type="text" name="nombre" id="nombre" class="form-control" required>
@@ -55,8 +56,10 @@
           </div>
 
           <div class="form-group">
-            <label for="documento">Subir Documento Legal (PDF)</label>
-            <input type="file" name="documento" id="documento" class="form-control" accept=".pdf" required>
+            <label>Subir Documento Legal (PDF)</label>
+            <button type="button" id="upload-btn" class="btn btn-secondary">Seleccionar Archivo</button>
+            <input type="hidden" name="documento_url" id="documento_url" required>
+            <p id="file-info" style="margin-top: 10px; color: #555;"></p>
           </div>
 
           <button type="submit" class="btn btn-primary btn-large">Registrarse</button>
@@ -68,5 +71,31 @@
     </div>
 
   </div>
+
+  <script>
+    document.addEventListener('DOMContentLoaded', function () {
+      const apikey = 'ADJMOe6jTf2i90cFTlUgpz';
+      const client = filestack.init(apikey);
+
+      const options = {
+        fromSources: ["local_file_system", "url", "googledrive", "dropbox"],
+        accept: ["application/pdf"],
+        maxFiles: 1,
+        lang: 'es',
+        onUploadDone: (res) => {
+          const file = res.filesUploaded[0];
+          document.getElementById('documento_url').value = file.url;
+          const fileInfo = document.getElementById('file-info');
+          fileInfo.textContent = `Archivo subido: ${file.filename}`;
+          fileInfo.style.color = '#28a745'; // Color verde para éxito
+          document.getElementById('upload-btn').textContent = 'Cambiar Archivo';
+        },
+      };
+
+      document.getElementById('upload-btn').addEventListener('click', () => {
+        client.picker(options).open();
+      });
+    });
+  </script>
 </body>
 </html>
