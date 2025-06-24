@@ -87,15 +87,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
             <?php else: ?>
                 <p>No se ha enviado ningún formulario.</p>
             <?php endif; ?>
-                    <a href="../../index.php" class="btn btn-primary">Volver al Inicio</a>
-                <?php elseif (!empty($error)): ?>
-                    <h2 class="error">Error en el Registro</h2>
-                    <p class="status-message error"><?php echo htmlspecialchars($error); ?></p>
-                    <a href="registroinsdepor.php" class="btn btn-secondary">Volver a Intentar</a>
-                <?php else: ?>
-                    <p>No se ha enviado ningún formulario.</p>
-                <?php endif; ?>
-            </div>
         </div>
-    </body>
-    </html>
+    </div>
+</body>
+</html>
