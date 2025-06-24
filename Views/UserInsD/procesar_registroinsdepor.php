@@ -87,27 +87,6 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
             <?php else: ?>
                 <p>No se ha enviado ningún formulario.</p>
             <?php endif; ?>
-        <link rel="stylesheet" href="../../Public/css/styles_registroinsdepor.css">
-        <style>
-            .status-container {
-                text-align: center;
-                padding: 40px;
-                margin-top: 50px;
-            }
-            .status-message {
-                font-size: 1.2em;
-                margin-bottom: 20px;
-            }
-            .success { color: #28a745; }
-            .error { color: #dc3545; }
-        </style>
-    </head>
-    <body class="auth-page">
-        <div class="auth-container">
-            <div class="status-container">
-                <?php if (!empty($message)): ?>
-                    <h2 class="success">¡Solicitud Enviada!</h2>
-                    <p class="status-message success"><?php echo htmlspecialchars($message); ?></p>
                     <a href="../../index.php" class="btn btn-primary">Volver al Inicio</a>
                 <?php elseif (!empty($error)): ?>
                     <h2 class="error">Error en el Registro</h2>
