@@ -34,7 +34,7 @@
         <h2>Registro de Institución Deportiva</h2>
       </div>
       <div class="auth-body">
-        <form action="procesar_registroinsdepor.php" method="POST">
+        <form action="/Views/UserInsD/procesar_registroinsdepor.php" method="POST">
           <div class="form-group">
             <label for="nombre">Nombre de la Institución</label>
             <input type="text" name="nombre" id="nombre" class="form-control" required>
