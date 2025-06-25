@@ -216,6 +216,54 @@ class ReservaModel {
         }
     }
 
+    // ✅ NUEVO: Crear reserva con pago PayPal
+    public function crearReservaConPayPal($usuarioId, $areaId, $fecha, $horaInicio, $horaFin, $paypalPaymentId, $paypalPayerId, $montoPagado) {
+        try {
+            error_log("ReservaModel - crearReservaConPayPal iniciado");
+            
+            // ✅ VERIFICAR DISPONIBILIDAD
+            $disponible = $this->verificarDisponibilidad($areaId, $fecha, $horaInicio, $horaFin);
+            if (!$disponible) {
+                return ['success' => false, 'message' => 'El horario ya no está disponible'];
+            }
+            
+            error_log("ReservaModel - Disponibilidad verificada");
+            
+            // ✅ INSERTAR RESERVA CON PAYPAL
+            $query = "INSERT INTO reservas 
+                     (id_usuario, area_deportiva_id, fecha, hora_inicio, hora_fin, estado, paypal_payment_id, paypal_payer_id, monto_pagado, metodo_pago) 
+                     VALUES (?, ?, ?, ?, ?, 'confirmada', ?, ?, ?, 'paypal')";
+            
+            $stmt = $this->conn->prepare($query);
+            if (!$stmt) {
+                throw new Exception('Error preparando query: ' . $this->conn->error);
+            }
+            
+            $stmt->bind_param("iisssssd", $usuarioId, $areaId, $fecha, $horaInicio, $horaFin, $paypalPaymentId, $paypalPayerId, $montoPagado);
+            
+            if ($stmt->execute()) {
+                $reservaId = $this->conn->insert_id;
+                $stmt->close();
+                
+                error_log("ReservaModel - Reserva creada con ID: $reservaId");
+                
+                return [
+                    'success' => true,
+                    'reserva_id' => $reservaId,
+                    'message' => 'Reserva creada exitosamente con PayPal'
+                ];
+            } else {
+                $error = $stmt->error;
+                $stmt->close();
+                throw new Exception('Error ejecutando query: ' . $error);
+            }
+            
+        } catch (Exception $e) {
+            error_log("ReservaModel - Error: " . $e->getMessage());
+            return ['success' => false, 'message' => 'Error: ' . $e->getMessage()];
+        }
+    }
+
     // ✅ NUEVO: Verificar disponibilidad de área
     public function verificarDisponibilidad($areaId, $fecha, $horaInicio, $horaFin) {
         // Verificar que el área esté activa

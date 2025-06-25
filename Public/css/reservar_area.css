@@ -213,6 +213,46 @@
     color: #fff !important;
 }
 
+/* ✅ ESTILOS ESPECÍFICOS PARA MODAL PAYPAL */
+.modal-reserva-content .paypal-payment {
+    color: #333 !important;
+    background: #fff !important;
+}
+
+.modal-reserva-content .paypal-payment p,
+.modal-reserva-content .paypal-payment strong,
+.modal-reserva-content .paypal-payment div {
+    color: #333 !important;
+}
+
+.modal-reserva-content .paypal-payment h3 {
+    color: #0070ba !important;
+}
+
+/* Contenedor de detalles */
+.modal-reserva-content .paypal-payment div[style*="background: #f8f9fa"] {
+    background: #f8f9fa !important;
+    color: #333 !important;
+    border: 1px solid #dee2e6 !important;
+}
+
+.modal-reserva-content .paypal-payment div[style*="background: #fff3cd"] {
+    background: #fff3cd !important;
+    color: #856404 !important;
+    border: 1px solid #ffeaa7 !important;
+}
+
+/* Botones PayPal */
+#paypal-button-container {
+    background: transparent !important;
+}
+
+/* Texto dentro del modal */
+.modal-reserva-content p,
+.modal-reserva-content strong {
+    color: #333 !important;
+}
+
 /* Responsive */
 @media (max-width: 900px) {
     .reserva-area-main { padding: 18px 4vw; }

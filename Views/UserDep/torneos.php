@@ -12,12 +12,14 @@ include_once 'header.php';
 
 <link rel="stylesheet" href="../../Public/css/torneos_dep.css">
 
+<!-- Scripts de pagos -->
+<script src="../../Public/js/culqi_integration.js"></script>
+<script src="../../Public/js/paypal_integration.js"></script>
+
+<!-- SDK de Culqi -->
+<script src="https://checkout.culqi.com/js/v4"></script>
+
 <div class="container mt-4">
-    <h2 class="mb-4">
-        <i class="fas fa-trophy"></i> TORNEOS DEPORTIVOS
-    </h2>
-    
-    <!-- FILTROS -->
     <div class="filtros-torneos">
         <h4><i class="fas fa-filter"></i> Filtros</h4>
         

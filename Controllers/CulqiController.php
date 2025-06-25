@@ -10,20 +10,21 @@ class CulqiController {
         $this->db = $database->getConnection();
     }
     
+    private function response($data) {
+        header('Content-Type: application/json; charset=utf-8');
+        echo json_encode($data, JSON_UNESCAPED_UNICODE);
+        exit;
+    }
+    
     public function handleRequest() {
-        // ✅ LEER ACTION DESDE GET, POST O JSON INPUT
         $action = $_GET['action'] ?? $_POST['action'] ?? '';
         
-        // ✅ SI NO HAY ACTION EN GET/POST, LEER DESDE JSON
         if (empty($action) && $_SERVER['REQUEST_METHOD'] === 'POST') {
             $input = json_decode(file_get_contents('php://input'), true);
             $action = $input['action'] ?? '';
         }
         
-        // ✅ DEBUG PARA VER QUÉ ACTION LLEGA
         error_log("CulqiController - Action recibido: " . $action);
-        error_log("CulqiController - Method: " . $_SERVER['REQUEST_METHOD']);
-        error_log("CulqiController - Input JSON: " . file_get_contents('php://input'));
         
         switch($action) {
             case 'get_config':
@@ -36,67 +37,95 @@ class CulqiController {
                 $this->processPayment();
                 break;
             default:
-                echo json_encode([
+                $this->response([
                     'success' => false, 
-                    'message' => 'Acción no válida: ' . $action,
-                    'debug' => [
-                        'method' => $_SERVER['REQUEST_METHOD'],
-                        'get' => $_GET,
-                        'post' => $_POST,
-                        'json_input' => json_decode(file_get_contents('php://input'), true)
-                    ]
+                    'message' => 'Acción no válida: ' . $action
                 ]);
         }
     }
     
-    // ✅ OBTENER CONFIGURACIÓN CULQI DE LA INSTALACIÓN
+    // ✅ ARREGLAR MÉTODO getCulqiConfig - BUSCAR DIRECTAMENTE EN usuarios_instalaciones
     private function getCulqiConfig() {
-        try {
-            $instalacionId = $_GET['instalacion_id'] ?? 0;
-            
-            // ✅ SIMPLIFICAR QUERY - BUSCAR DIRECTAMENTE POR AREA_ID
-            $query = "SELECT ui.culqi_public_key, ui.culqi_enabled 
-                     FROM usuarios_instalaciones ui
-                     INNER JOIN instituciones_deportivas id ON ui.id = id.usuario_instalacion_id
-                     INNER JOIN areas_deportivas ad ON id.id = ad.institucion_deportiva_id
-                     WHERE ad.id = ? AND ui.culqi_enabled = 1 
-                     LIMIT 1";
-            
-            $stmt = $this->db->prepare($query);
-            $stmt->bind_param("i", $instalacionId);
-            $stmt->execute();
-            $result = $stmt->get_result();
-            
-            if ($result && $result->num_rows > 0) {
-                $row = $result->fetch_assoc();
-                echo json_encode([
-                    'success' => true,
-                    'public_key' => $row['culqi_public_key']
-                ]);
-            } else {
-                echo json_encode([
-                    'success' => false,
-                    'message' => 'Configuración de pagos no disponible para área ID: ' . $instalacionId
-                ]);
-            }
-            
-            $stmt->close();
-            
-        } catch (Exception $e) {
-            echo json_encode([
-                'success' => false,
-                'message' => 'Error: ' . $e->getMessage()
-            ]);
+        $instalacionId = $_GET['instalacion_id'] ?? 0;
+        
+        if (!$instalacionId) {
+            $this->response(['success' => false, 'message' => 'ID de instalación requerido']);
+            return;
         }
+        
+        // ✅ BUSCAR CONFIGURACIÓN DIRECTAMENTE - SIMPLIFICADO
+        // Primero intentar por area deportiva -> institución -> usuario
+        $query = "SELECT ui.culqi_public_key, ui.culqi_secret_key, ui.culqi_enabled
+                  FROM areas_deportivas ad
+                  INNER JOIN instituciones_deportivas id ON ad.institucion_deportiva_id = id.id
+                  INNER JOIN usuarios_instalaciones ui ON id.usuario_instalacion_id = ui.id
+                  WHERE ad.id = ? AND ui.culqi_enabled = 1
+                  LIMIT 1";
+        
+        $stmt = $this->db->prepare($query);
+        $stmt->bind_param("i", $instalacionId);
+        $stmt->execute();
+        $result = $stmt->get_result();
+        
+        if ($row = $result->fetch_assoc()) {
+            $this->response([
+                'success' => true,
+                'public_key' => $row['culqi_public_key'],
+                'enabled' => $row['culqi_enabled']
+            ]);
+            return;
+        }
+        
+        // ✅ FALLBACK: Buscar directamente en usuarios_instalaciones por ID
+        $queryFallback = "SELECT culqi_public_key, culqi_secret_key, culqi_enabled
+                          FROM usuarios_instalaciones 
+                          WHERE id = ? AND culqi_enabled = 1
+                          LIMIT 1";
+        
+        $stmtFallback = $this->db->prepare($queryFallback);
+        $stmtFallback->bind_param("i", $instalacionId);
+        $stmtFallback->execute();
+        $resultFallback = $stmtFallback->get_result();
+        
+        if ($rowFallback = $resultFallback->fetch_assoc()) {
+            $this->response([
+                'success' => true,
+                'public_key' => $rowFallback['culqi_public_key'],
+                'enabled' => $rowFallback['culqi_enabled']
+            ]);
+            return;
+        }
+        
+        // ✅ ÚLTIMO FALLBACK: Usar configuración por defecto del usuario ID=1
+        $queryDefault = "SELECT culqi_public_key, culqi_secret_key, culqi_enabled
+                         FROM usuarios_instalaciones 
+                         WHERE id = 1 AND culqi_enabled = 1
+                         LIMIT 1";
+        
+        $stmtDefault = $this->db->prepare($queryDefault);
+        $stmtDefault->execute();
+        $resultDefault = $stmtDefault->get_result();
+        
+        if ($rowDefault = $resultDefault->fetch_assoc()) {
+            error_log("CulqiController - Usando configuración por defecto para instalación: " . $instalacionId);
+            $this->response([
+                'success' => true,
+                'public_key' => $rowDefault['culqi_public_key'],
+                'enabled' => $rowDefault['culqi_enabled']
+            ]);
+            return;
+        }
+        
+        // ✅ SI NADA FUNCIONA, ERROR CLARO
+        $this->response([
+            'success' => false, 
+            'message' => 'Configuración de pagos no disponible para área ID: ' . $instalacionId
+        ]);
     }
     
-    // ✅ CREAR ORDEN DE PAGO
     private function createOrder() {
         try {
             $input = json_decode(file_get_contents('php://input'), true);
-            
-            // ✅ DEBUG PARA VER QUÉ DATOS LLEGAN
-            error_log("CulqiController - createOrder input: " . print_r($input, true));
             
             if (!$input) {
                 throw new Exception('No se recibieron datos JSON válidos');
@@ -110,7 +139,7 @@ class CulqiController {
                 throw new Exception('Monto no válido: ' . $amount);
             }
             
-            echo json_encode([
+            $this->response([
                 'success' => true,
                 'order' => [
                     'order_id' => $orderId,
@@ -120,14 +149,13 @@ class CulqiController {
                 ]
             ]);
         } catch (Exception $e) {
-            echo json_encode([
+            $this->response([
                 'success' => false,
                 'message' => 'Error creando orden: ' . $e->getMessage()
             ]);
         }
     }
     
-    // ✅ PROCESAR PAGO CON CULQI
     private function processPayment() {
         try {
             $input = json_decode(file_get_contents('php://input'), true);
@@ -137,7 +165,7 @@ class CulqiController {
             }
             
             $token = $input['token'] ?? '';
-            $amount = floatval($input['amount'] ?? 0) * 100; // Culqi usa centavos
+            $amount = floatval($input['amount'] ?? 0) * 100;
             $orderId = $input['order_id'] ?? '';
             $description = $input['description'] ?? '';
             
@@ -149,9 +177,8 @@ class CulqiController {
                 throw new Exception('Monto no válido');
             }
             
-            // ✅ OBTENER EMAIL DEL USUARIO
             session_start();
-            $userEmail = 'test@gameon.com'; // Email por defecto para pruebas
+            $userEmail = 'test@gameon.com';
             if (isset($_SESSION['user_id'])) {
                 $query = "SELECT email FROM usuarios_deportistas WHERE id = ?";
                 $stmt = $this->db->prepare($query);
@@ -167,10 +194,8 @@ class CulqiController {
                 }
             }
             
-            // ✅ TU SECRET KEY DE PRUEBA
             $secretKey = 'sk_test_DthTrZ9s5AVPzLaA';
             
-            // ✅ DATOS PARA CULQI CON CONFIGURACIÓN ESPECIAL PARA MODO PRUEBA
             $chargeData = [
                 'amount' => $amount,
                 'currency_code' => 'PEN',
@@ -179,14 +204,12 @@ class CulqiController {
                 'source_id' => $token
             ];
             
-            // ✅ AÑADIR order_id solo si no está vacío
             if (!empty($orderId)) {
                 $chargeData['order_id'] = $orderId;
             }
             
             error_log("CulqiController - Datos enviados a Culqi: " . json_encode($chargeData));
             
-            // ✅ LLAMADA A CULQI CON MANEJO ESPECIAL PARA CUENTAS EN VALIDACIÓN
             try {
                 $response = $this->callCulqiAPI('charges', $chargeData, $secretKey);
                 
@@ -194,25 +217,23 @@ class CulqiController {
                 
                 if ($response && isset($response['outcome'])) {
                     if ($response['outcome']['type'] === 'venta_exitosa') {
-                        echo json_encode([
+                        $this->response([
                             'success' => true,
                             'charge_id' => $response['id'],
                             'message' => 'Pago exitoso'
                         ]);
                     } else {
-                        // ✅ MANEJO ESPECIAL PARA ERRORES EN MODO PRUEBA
                         $errorMessage = $response['outcome']['user_message'] ?? 'Error en el pago';
                         
-                        // Si es error de cuenta no validada, dar mensaje más claro
                         if (strpos($errorMessage, 'merchant') !== false || strpos($errorMessage, 'validat') !== false) {
-                            echo json_encode([
+                            $this->response([
                                 'success' => false,
                                 'message' => 'Tu cuenta Culqi está en proceso de validación. Usa las tarjetas de prueba: 4111 1111 1111 1111',
                                 'error_type' => 'validation',
                                 'culqi_response' => $response
                             ]);
                         } else {
-                            echo json_encode([
+                            $this->response([
                                 'success' => false,
                                 'message' => $errorMessage,
                                 'culqi_response' => $response
@@ -224,18 +245,17 @@ class CulqiController {
                 }
                 
             } catch (Exception $apiError) {
-                // ✅ MANEJO ESPECIAL PARA ERRORES DE API EN MODO PRUEBA
                 $errorMessage = $apiError->getMessage();
                 
                 if (strpos($errorMessage, '403') !== false || strpos($errorMessage, 'merchant') !== false) {
-                    echo json_encode([
+                    $this->response([
                         'success' => false,
                         'message' => 'Cuenta Culqi en validación. Espera la activación o contacta a soporte.',
                         'error_type' => 'account_validation',
                         'api_error' => $errorMessage
                     ]);
                 } else {
-                    echo json_encode([
+                    $this->response([
                         'success' => false,
                         'message' => 'Error de conexión con Culqi: ' . $errorMessage,
                         'error_type' => 'api_error'
@@ -244,14 +264,13 @@ class CulqiController {
             }
             
         } catch (Exception $e) {
-            echo json_encode([
+            $this->response([
                 'success' => false,
                 'message' => 'Error procesando pago: ' . $e->getMessage()
             ]);
         }
     }
     
-    // ✅ LLAMADA A API CULQI
     private function callCulqiAPI($endpoint, $data, $secretKey) {
         $url = "https://api.culqi.com/v2/{$endpoint}";
         
@@ -287,13 +306,11 @@ class CulqiController {
     }
 }
 
-// ✅ MANEJAR REQUESTS CON HEADERS CORS
 header('Content-Type: application/json');
 header('Access-Control-Allow-Origin: *');
 header('Access-Control-Allow-Methods: GET, POST, OPTIONS');
 header('Access-Control-Allow-Headers: Content-Type');
 
-// ✅ MANEJAR OPTIONS REQUEST (PREFLIGHT)
 if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
     http_response_code(200);
     exit();

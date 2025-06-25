@@ -11,6 +11,7 @@ include_once 'header.php';
 <link rel="stylesheet" href="../../Public/css/reservar_area.css">
 <script src="https://checkout.culqi.com/js/v4"></script>
 <script src="../../Public/js/culqi_integration.js"></script>
+<script src="../../Public/js/paypal_integration.js"></script>
 
 <div class="reserva-area-main">
     <a href="insdepor.php" class="btn-volver"><i class="fas fa-arrow-left"></i> Volver a instalaciones</a>
@@ -34,7 +35,14 @@ include_once 'header.php';
         <!-- Aquí se cargan los bloques de horarios -->
     </div>
     <div class="pago-culqi-zone" id="pagoCulqiZone" style="display:none;">
-        <button class="btn btn-primary" id="btnPagarCulqi"><i class="fas fa-credit-card"></i> Pagar con Culqi</button>
+        <div class="payment-methods" style="display: flex; gap: 15px; justify-content: center; flex-wrap: wrap;">
+            <button class="btn btn-primary" id="btnPagarCulqi" style="background: #007bff; border-color: #007bff;">
+                <i class="fas fa-credit-card"></i> Pagar con Culqi
+            </button>
+            <button class="btn btn-paypal" id="btnPagarPayPal" style="background: #0070ba; border-color: #0070ba; color: white;">
+                <i class="fab fa-paypal"></i> Pagar con PayPal
+            </button>
+        </div>
     </div>
 </div>
 
@@ -146,6 +154,42 @@ document.addEventListener('DOMContentLoaded', function() {
         
         // ✅ INICIAR PROCESO DE PAGO
         window.culqiIntegration.procesarPagoCompleto(reservaData);
+    };
+    
+    // ✅ BOTÓN PAGO PAYPAL
+    document.getElementById('btnPagarPayPal').onclick = function() {
+        if (bloquesSeleccionados.length === 0) {
+            alert('Selecciona al menos un horario');
+            return;
+        }
+        
+        // ✅ PREPARAR DATOS DE RESERVA (IGUAL QUE CULQI)
+        const bloques = bloquesSeleccionados.map(idx => window.cronogramaActual[idx]);
+        const horaInicio = bloques[0].hora_inicio;
+        const horaFin = bloques[bloques.length - 1].hora_fin;
+        const monto = parseFloat(document.getElementById('montoPagar').textContent);
+        
+        const reservaData = {
+            usuario_id: window.USER_ID,
+            area_id: window.AREA_ID,
+            area_nombre: window.AREA_NOMBRE,
+            instalacion_id: window.AREA_ID, // Por ahora usa area_id como instalacion_id
+            fecha: fechaSeleccionada,
+            hora_inicio: horaInicio,
+            hora_fin: horaFin,
+            monto: monto,
+            bloques_seleccionados: bloquesSeleccionados
+        };
+        
+        console.log('🚀 Iniciando pago con PayPal:', reservaData);
+        
+        // ✅ VERIFICAR QUE PAYPAL INTEGRATION ESTÉ DISPONIBLE
+        if (window.paypalIntegration && typeof window.paypalIntegration.procesarPagoCompleto === 'function') {
+            window.paypalIntegration.procesarPagoCompleto(reservaData);
+        } else {
+            alert('Error: Sistema de pagos PayPal no disponible');
+            console.error('❌ paypalIntegration no está disponible');
+        }
     };
 });
 </script>
