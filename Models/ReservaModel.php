@@ -180,6 +180,42 @@ class ReservaModel {
         ];
     }
 
+    // ✅ NUEVO: Crear reserva con pago
+    public function crearReservaConPago($usuarioId, $areaId, $fecha, $horaInicio, $horaFin, $culqiChargeId, $montoPagado) {
+        try {
+            // ✅ VERIFICAR DISPONIBILIDAD
+            $disponible = $this->verificarDisponibilidad($areaId, $fecha, $horaInicio, $horaFin);
+            if (!$disponible) {
+                return ['success' => false, 'message' => 'El horario ya no está disponible'];
+            }
+            
+            // ✅ INSERTAR RESERVA CON CULQI
+            $query = "INSERT INTO reservas 
+                     (id_usuario, area_deportiva_id, fecha, hora_inicio, hora_fin, estado, culqi_charge_id, monto_pagado, metodo_pago) 
+                     VALUES (?, ?, ?, ?, ?, 'confirmada', ?, ?, 'culqi')";
+            
+            $stmt = $this->conn->prepare($query);
+            $stmt->bind_param("iissssd", $usuarioId, $areaId, $fecha, $horaInicio, $horaFin, $culqiChargeId, $montoPagado);
+            
+            if ($stmt->execute()) {
+                $reservaId = $this->conn->insert_id;
+                $stmt->close();
+                
+                return [
+                    'success' => true,
+                    'reserva_id' => $reservaId,
+                    'message' => 'Reserva creada exitosamente'
+                ];
+            } else {
+                $stmt->close();
+                throw new Exception('Error al insertar la reserva');
+            }
+            
+        } catch (Exception $e) {
+            return ['success' => false, 'message' => 'Error: ' . $e->getMessage()];
+        }
+    }
+
     // ✅ NUEVO: Verificar disponibilidad de área
     public function verificarDisponibilidad($areaId, $fecha, $horaInicio, $horaFin) {
         // Verificar que el área esté activa

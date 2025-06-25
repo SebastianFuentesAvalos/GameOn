@@ -9,6 +9,8 @@ $areaNombre = isset($_GET['area_nombre']) ? urldecode($_GET['area_nombre']) : ''
 include_once 'header.php';
 ?>
 <link rel="stylesheet" href="../../Public/css/reservar_area.css">
+<script src="https://checkout.culqi.com/js/v4"></script>
+<script src="../../Public/js/culqi_integration.js"></script>
 
 <div class="reserva-area-main">
     <a href="insdepor.php" class="btn-volver"><i class="fas fa-arrow-left"></i> Volver a instalaciones</a>
@@ -57,24 +59,58 @@ window.TARIFA_POR_HORA = 0;
 // Cargar tarifa y cronograma juntos
 function cargarTarifaYHorarios() {
     const fecha = document.getElementById('fechaReserva').value;
+    
+    // ✅ MOSTRAR LOADING
+    document.getElementById('horariosGrid').innerHTML = '<div class="loading-horarios">Cargando horarios...</div>';
+    
     fetch('../../Controllers/AreasPublicController.php?action=get_area_cronograma&area_id=' + window.AREA_ID + '&fecha=' + fecha)
         .then(r => r.json())
         .then(data => {
+            console.log('📡 Respuesta del servidor:', data);
+            
             if (data.success) {
-                document.getElementById('tarifaPorHora').textContent = data.tarifa_por_hora.toFixed(2);
-                window.TARIFA_POR_HORA = data.tarifa_por_hora;
-                // ACTUALIZA cronogramaActual
-                window.cronogramaActual = data.cronograma || [];
-                if (typeof renderBloques === 'function') {
-                    renderBloques(window.cronogramaActual);
+                // ✅ ACTUALIZAR TARIFA
+                const tarifa = parseFloat(data.tarifa_por_hora) || 0;
+                document.getElementById('tarifaPorHora').textContent = tarifa.toFixed(2);
+                window.TARIFA_POR_HORA = tarifa;
+                
+                // ✅ ACTUALIZAR CRONOGRAMA
+                const cronograma = data.cronograma || [];
+                window.cronogramaActual = cronograma;
+                
+                console.log('✅ Tarifa cargada:', tarifa);
+                console.log('✅ Cronograma cargado:', cronograma);
+                
+                // ✅ LLAMAR A FUNCIÓN GLOBAL PARA ACTUALIZAR
+                if (typeof window.actualizarCronograma === 'function') {
+                    window.actualizarCronograma(cronograma);
+                } else if (typeof renderBloques === 'function') {
+                    renderBloques(cronograma);
                 }
-                if (typeof actualizarMonto === 'function') actualizarMonto();
+                
+                // ✅ ACTUALIZAR MONTO
+                if (typeof actualizarMonto === 'function') {
+                    actualizarMonto();
+                }
             } else {
+                console.error('❌ Error del servidor:', data.message);
                 document.getElementById('tarifaPorHora').textContent = '0.00';
                 window.TARIFA_POR_HORA = 0;
                 window.cronogramaActual = [];
-                if (typeof renderBloques === 'function') renderBloques([]);
+                
+                if (typeof window.actualizarCronograma === 'function') {
+                    window.actualizarCronograma([]);
+                } else if (typeof renderBloques === 'function') {
+                    renderBloques([]);
+                }
             }
+        })
+        .catch(error => {
+            console.error('❌ Error cargando datos:', error);
+            document.getElementById('tarifaPorHora').textContent = '0.00';
+            window.TARIFA_POR_HORA = 0;
+            window.cronogramaActual = [];
+            document.getElementById('horariosGrid').innerHTML = '<div class="loading-horarios">Error cargando horarios</div>';
         });
 }
 
@@ -82,6 +118,35 @@ function cargarTarifaYHorarios() {
 document.addEventListener('DOMContentLoaded', function() {
     cargarTarifaYHorarios();
     document.getElementById('fechaReserva').addEventListener('change', cargarTarifaYHorarios);
+    
+    // ✅ BOTÓN PAGO CULQI ACTUALIZADO
+    document.getElementById('btnPagarCulqi').onclick = function() {
+        if (bloquesSeleccionados.length === 0) {
+            alert('Selecciona al menos un horario');
+            return;
+        }
+        
+        // ✅ PREPARAR DATOS DE RESERVA
+        const bloques = bloquesSeleccionados.map(idx => window.cronogramaActual[idx]);
+        const horaInicio = bloques[0].hora_inicio;
+        const horaFin = bloques[bloques.length - 1].hora_fin;
+        const monto = parseFloat(document.getElementById('montoPagar').textContent);
+        
+        const reservaData = {
+            usuario_id: window.USER_ID,
+            area_id: window.AREA_ID,
+            area_nombre: window.AREA_NOMBRE,
+            instalacion_id: window.AREA_ID, // Por ahora usa area_id como instalacion_id
+            fecha: fechaSeleccionada,
+            hora_inicio: horaInicio,
+            hora_fin: horaFin,
+            monto: monto,
+            bloques_seleccionados: bloquesSeleccionados
+        };
+        
+        // ✅ INICIAR PROCESO DE PAGO
+        window.culqiIntegration.procesarPagoCompleto(reservaData);
+    };
 });
 </script>
 <script src="../../Public/js/reservar_area.js"></script>

@@ -42,9 +42,18 @@ class ReservaController {
         } elseif ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $action = $_POST['action'] ?? '';
             
+            // ✅ MANEJAR JSON INPUT PARA CULQI
+            if (empty($action)) {
+                $input = json_decode(file_get_contents('php://input'), true);
+                $action = $input['action'] ?? '';
+            }
+            
             switch($action) {
                 case 'crear_reserva':
                     $this->crearReserva();
+                    break;
+                case 'create_reservation': // ✅ NUEVO PARA CULQI
+                    $this->createReservationWithPayment();
                     break;
                 default:
                     $this->sendError('Acción POST no válida');
@@ -137,6 +146,48 @@ class ReservaController {
 
         } catch (Exception $e) {
             $this->sendError('Error creando reserva: ' . $e->getMessage());
+        }
+    }
+
+    // ✅ NUEVO: Crear reserva con pago
+    public function createReservationWithPayment() {
+        try {
+            $input = json_decode(file_get_contents('php://input'), true);
+            
+            $usuarioId = $input['usuario_id'];
+            $areaId = $input['area_id'];
+            $fecha = $input['fecha'];
+            $horaInicio = $input['hora_inicio'];
+            $horaFin = $input['hora_fin'];
+            $culqiChargeId = $input['culqi_charge_id'];
+            $montoPagado = floatval($input['monto']);
+            
+            // ✅ INSERTAR RESERVA CON DATOS DE CULQI
+            $resultado = $this->reservaModel->crearReservaConPago(
+                $usuarioId, 
+                $areaId, 
+                $fecha, 
+                $horaInicio, 
+                $horaFin, 
+                $culqiChargeId, 
+                $montoPagado
+            );
+            
+            if ($resultado['success']) {
+                echo json_encode([
+                    'success' => true,
+                    'reserva_id' => $resultado['reserva_id'],
+                    'message' => 'Reserva creada exitosamente'
+                ]);
+            } else {
+                throw new Exception($resultado['message']);
+            }
+            
+        } catch (Exception $e) {
+            echo json_encode([
+                'success' => false,
+                'message' => 'Error: ' . $e->getMessage()
+            ]);
         }
     }
 
