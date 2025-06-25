@@ -16,7 +16,7 @@
 
 
 -- Volcando estructura de base de datos para railway
-CREATE DATABASE IF NOT EXISTS `railway` /*!40100 DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci */;
+CREATE DATABASE IF NOT EXISTS `railway` /*!40100 DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci */ /*!80016 DEFAULT ENCRYPTION='N' */;
 USE `railway`;
 
 -- Volcando estructura para tabla railway.amistades
@@ -58,7 +58,7 @@ CREATE TABLE IF NOT EXISTS `areas_deportivas` (
   CONSTRAINT `areas_deportivas_ibfk_2` FOREIGN KEY (`deporte_id`) REFERENCES `deportes` (`id`) ON DELETE CASCADE
 ) ENGINE=InnoDB AUTO_INCREMENT=31 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
--- Volcando datos para la tabla railway.areas_deportivas: ~15 rows (aproximadamente)
+-- Volcando datos para la tabla railway.areas_deportivas: ~14 rows (aproximadamente)
 INSERT INTO `areas_deportivas` (`id`, `institucion_deportiva_id`, `deporte_id`, `nombre_area`, `descripcion`, `capacidad_jugadores`, `tarifa_por_hora`, `estado`, `imagen_area`, `creado_en`) VALUES
 	(16, 1, 1, 'Cancha de Fútbol Principal', 'Cancha de césped sintético con iluminación LED completa', 22, 83.00, 'activa', 'https://i.ibb.co/JWPC8xCW/cancha1.jpg', '2025-06-16 21:44:21'),
 	(17, 1, 1, 'Cancha de Fútbol Secundaria', 'Cancha de césped natural para entrenamientos', 22, 60.00, 'activa', 'https://i.ibb.co/Y7rqxcQ1/ga1.jpg', '2025-06-16 21:44:21'),
@@ -73,7 +73,6 @@ INSERT INTO `areas_deportivas` (`id`, `institucion_deportiva_id`, `deporte_id`, 
 	(26, 3, 2, 'Cancha de Vóley Municipal', 'Cancha oficial para torneos municipales', 12, 45.00, 'activa', 'https://i.ibb.co/fz9YKBbK/fefefe.jpg', '2025-06-16 21:44:51'),
 	(27, 3, 3, 'Cancha de Básquet Municipal', 'Cancha de básquet para eventos municipales', 10, 50.00, 'activa', 'https://i.ibb.co/sdD20DRS/rera.jpg', '2025-06-16 21:44:51'),
 	(28, 3, 1, 'Campo de Entrenamiento', 'Campo auxiliar para entrenamientos y partidos menores', 22, 90.00, 'mantenimiento', 'https://i.ibb.co/C5mV0P8c/gaga.jpg', '2025-06-16 21:44:51'),
-	(29, 3, 3, 'Supremacia James', 'Supremacia...', 22, 50.00, 'activa', 'https://i.ibb.co/Fk6NG1T3/VICTOR.jpg', '2025-06-23 06:24:09'),
 	(30, 4, 3, 'Cancha de Básquet Techada', 'cancha moderna para juagar basquet', 10, 60.00, 'activa', 'https://i.ibb.co/0V8wSYpp/basquet.jpg', '2025-06-23 21:22:50');
 
 -- Volcando estructura para tabla railway.areas_horarios
@@ -354,6 +353,7 @@ CREATE TABLE IF NOT EXISTS `instituciones_deportivas` (
   `id` int NOT NULL AUTO_INCREMENT,
   `usuario_instalacion_id` int NOT NULL,
   `nombre` varchar(100) COLLATE utf8mb4_general_ci NOT NULL,
+  `ruc` varchar(11) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NOT NULL,
   `direccion` varchar(200) COLLATE utf8mb4_general_ci NOT NULL,
   `latitud` decimal(10,8) NOT NULL,
   `longitud` decimal(11,8) NOT NULL,
@@ -365,20 +365,33 @@ CREATE TABLE IF NOT EXISTS `instituciones_deportivas` (
   `descripcion` text COLLATE utf8mb4_general_ci,
   `estado` tinyint(1) NOT NULL DEFAULT '1',
   `creado_en` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  `razon_social_sunat` varchar(255) COLLATE utf8mb4_general_ci DEFAULT NULL,
+  `direccion_sunat` varchar(255) COLLATE utf8mb4_general_ci DEFAULT NULL,
+  `distrito_sunat` varchar(100) COLLATE utf8mb4_general_ci DEFAULT NULL,
+  `provincia_sunat` varchar(100) COLLATE utf8mb4_general_ci DEFAULT NULL,
+  `departamento_sunat` varchar(100) COLLATE utf8mb4_general_ci DEFAULT NULL,
+  `estado_sunat` varchar(50) COLLATE utf8mb4_general_ci DEFAULT NULL,
+  `condicion_sunat` varchar(50) COLLATE utf8mb4_general_ci DEFAULT NULL,
+  `documento_legal` varchar(255) COLLATE utf8mb4_general_ci DEFAULT NULL,
+  `fecha_registro` datetime DEFAULT CURRENT_TIMESTAMP,
+  `estado_aprobacion` varchar(50) COLLATE utf8mb4_general_ci DEFAULT 'PENDIENTE',
   PRIMARY KEY (`id`),
+  UNIQUE KEY `ruc_institucion_unique` (`ruc`) USING BTREE,
   KEY `usuario_instalacion_id` (`usuario_instalacion_id`),
   CONSTRAINT `instituciones_deportivas_ibfk_1` FOREIGN KEY (`usuario_instalacion_id`) REFERENCES `usuarios_instalaciones` (`id`) ON DELETE CASCADE
-) ENGINE=InnoDB AUTO_INCREMENT=8 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=10 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
--- Volcando datos para la tabla railway.instituciones_deportivas: ~7 rows (aproximadamente)
-INSERT INTO `instituciones_deportivas` (`id`, `usuario_instalacion_id`, `nombre`, `direccion`, `latitud`, `longitud`, `imagen`, `tarifa`, `calificacion`, `telefono`, `email`, `descripcion`, `estado`, `creado_en`) VALUES
-	(1, 1, 'Top Gol Tacna', 'Av. Bolognesi 1234, Tacna', -17.99927959, -70.23738205, 'https://i.ibb.co/dJG8hdzS/images.png', 51.00, 4.50, '946143071', 'contacto@topgoltacna.com', 'Canchas de fútbol con césped sintético de primera calidad PREMIUM', 1, '2025-05-21 19:15:21'),
-	(2, 1, 'Complejo Deportivo Municipal', 'Calle Patricio Meléndez 500, Tacna', -18.01220000, -70.25360000, 'https://i.ibb.co/Qvc2gsKS/complejodeportivo.jpg', 35.00, 4.20, '052987654', 'deportes@munitacna.gob.pe', 'Complejo deportivo municipal con múltiples canchas', 1, '2025-05-21 19:15:21'),
-	(3, 1, 'Club Deportivo Tacna', 'Av. Cusco 750, Tacna', -18.00550000, -70.23980000, 'https://i.ibb.co/gb2kHZCq/111111.jpg', 65.00, 4.80, '052456789', 'info@clubdeportivotacna.com', 'Club exclusivo con instalaciones de primer nivel', 1, '2025-05-21 19:15:21'),
-	(4, 2, 'IPD Tacna - Complejo Deportivo', 'Av. Gregorio Albarracín s/n, Tacna', -18.01500000, -70.25800000, 'https://i.ibb.co/KjNmNbTr/images.jpg', 25.00, 5.00, '052-427070', 'ipd.tacna@ipd.gob.pe', 'Complejo deportivo del Instituto Peruano del Deporte', 1, '2025-06-04 20:03:09'),
-	(5, 2, 'IPD Tacna - Estadio Pallardelle', 'Av. Augusto Bernardino Leguia', 0.00000000, 0.00000000, 'https://i.ibb.co/bMXJzNpS/images-1.jpg', 0.00, 0.00, '052-123456', 'ipd.tacna@ipd.gob.pe', 'Instalaciones Modernas', 1, '2025-06-23 21:25:10'),
-	(6, 2, 'IPD Tacna - Coliseo Peru', 'Gral Deustua, Tacna 23001', 0.00000000, 0.00000000, 'https://i.ibb.co/BKHDLRq8/images-2.jpg', 40.00, 0.00, '052-456789', 'ipd.tacna@ipd.gob.pe', 'Coliseo Peru ', 1, '2025-06-23 21:57:34'),
-	(7, 2, 'IPD Tacna - Estadio Jorge Basadre Grohman', 'Av. Coronel Justo Arias Araguez, Tacna 23001', 0.00000000, 0.00000000, 'https://i.ibb.co/hRxcH99R/Estadio-de-Tacna.jpg', 0.00, 0.00, '052-456789', 'ipd.tacna@ipd.gob.pe', 'Area Multidiciplinarias', 1, '2025-06-23 22:00:14');
+-- Volcando datos para la tabla railway.instituciones_deportivas: ~9 rows (aproximadamente)
+INSERT INTO `instituciones_deportivas` (`id`, `usuario_instalacion_id`, `nombre`, `ruc`, `direccion`, `latitud`, `longitud`, `imagen`, `tarifa`, `calificacion`, `telefono`, `email`, `descripcion`, `estado`, `creado_en`, `razon_social_sunat`, `direccion_sunat`, `distrito_sunat`, `provincia_sunat`, `departamento_sunat`, `estado_sunat`, `condicion_sunat`, `documento_legal`, `fecha_registro`, `estado_aprobacion`) VALUES
+	(1, 1, 'Top Gol Tacna', '00000000001', 'Av. Bolognesi 1234, Tacna', -17.99927959, -70.23738205, 'https://i.ibb.co/dJG8hdzS/images.png', 51.00, 4.50, '946143071', 'contacto@topgoltacna.com', 'Canchas de fútbol con césped sintético de primera calidad PREMIUM', 1, '2025-05-21 19:15:21', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, '2025-06-25 15:11:48', 'PENDIENTE'),
+	(2, 1, 'Complejo Deportivo Municipal', '00000000002', 'Calle Patricio Meléndez 500, Tacna', -18.01220000, -70.25360000, 'https://i.ibb.co/Qvc2gsKS/complejodeportivo.jpg', 35.00, 4.20, '052987654', 'deportes@munitacna.gob.pe', 'Complejo deportivo municipal con múltiples canchas', 1, '2025-05-21 19:15:21', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, '2025-06-25 15:11:48', 'PENDIENTE'),
+	(3, 1, 'Club Deportivo Tacna', '00000000003', 'Av. Cusco 750, Tacna', -18.00550000, -70.23980000, 'https://i.ibb.co/gb2kHZCq/111111.jpg', 65.00, 4.80, '052456789', 'info@clubdeportivotacna.com', 'Club exclusivo con instalaciones de primer nivel', 1, '2025-05-21 19:15:21', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, '2025-06-25 15:11:48', 'PENDIENTE'),
+	(4, 2, 'IPD Tacna - Complejo Deportivo', '00000000004', 'Av. Gregorio Albarracín s/n, Tacna', -18.01500000, -70.25800000, 'https://i.ibb.co/KjNmNbTr/images.jpg', 25.00, 5.00, '052-427070', 'ipd.tacna@ipd.gob.pe', 'Complejo deportivo del Instituto Peruano del Deporte', 1, '2025-06-04 20:03:09', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, '2025-06-25 15:11:48', 'PENDIENTE'),
+	(5, 2, 'IPD Tacna - Estadio Pallardelle', '00000000005', 'Av. Augusto Bernardino Leguia', 0.00000000, 0.00000000, 'https://i.ibb.co/bMXJzNpS/images-1.jpg', 0.00, 0.00, '052-123456', 'ipd.tacna@ipd.gob.pe', 'Instalaciones Modernas', 1, '2025-06-23 21:25:10', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, '2025-06-25 15:11:48', 'PENDIENTE'),
+	(6, 2, 'IPD Tacna - Coliseo Peru', '00000000006', 'Gral Deustua, Tacna 23001', 0.00000000, 0.00000000, 'https://i.ibb.co/BKHDLRq8/images-2.jpg', 40.00, 0.00, '052-456789', 'ipd.tacna@ipd.gob.pe', 'Coliseo Peru ', 1, '2025-06-23 21:57:34', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, '2025-06-25 15:11:48', 'PENDIENTE'),
+	(7, 2, 'IPD Tacna - Estadio Jorge Basadre Grohman', '00000000007', 'Av. Coronel Justo Arias Araguez, Tacna 23001', 0.00000000, 0.00000000, 'https://i.ibb.co/hRxcH99R/Estadio-de-Tacna.jpg', 0.00, 0.00, '052-456789', 'ipd.tacna@ipd.gob.pe', 'Area Multidiciplinarias', 1, '2025-06-23 22:00:14', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, '2025-06-25 15:11:48', 'PENDIENTE'),
+	(8, 5, 'canchapero', '99999999999', '0', 0.00000000, 0.00000000, NULL, 0.00, 0.00, 'N/A', 'myrayita2004@gmail.com', NULL, 1, '2025-06-24 22:21:20', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, '2025-06-25 15:11:48', 'PENDIENTE'),
+	(9, 6, 'Victor Cruz Mamani', '12345678901', '0', 0.00000000, 0.00000000, NULL, 0.00, 0.00, 'N/A', 'pepito@gmail.com', NULL, 1, '2025-06-24 23:51:31', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, '2025-06-25 15:11:48', 'PENDIENTE');
 
 -- Volcando estructura para tabla railway.password_recovery_tokens
 CREATE TABLE IF NOT EXISTS `password_recovery_tokens` (
@@ -418,6 +431,10 @@ CREATE TABLE IF NOT EXISTS `reservas` (
   `hora_fin` time NOT NULL,
   `estado` enum('pendiente','confirmada','cancelada') COLLATE utf8mb4_general_ci NOT NULL DEFAULT 'pendiente',
   `creado_en` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  `culqi_charge_id` varchar(100) COLLATE utf8mb4_general_ci DEFAULT NULL,
+  `culqi_order_id` varchar(100) COLLATE utf8mb4_general_ci DEFAULT NULL,
+  `monto_pagado` decimal(10,2) DEFAULT NULL,
+  `metodo_pago` enum('culqi','efectivo','transferencia') COLLATE utf8mb4_general_ci DEFAULT 'culqi',
   PRIMARY KEY (`id`),
   KEY `id_usuario` (`id_usuario`),
   KEY `area_deportiva_id` (`area_deportiva_id`),
@@ -426,13 +443,13 @@ CREATE TABLE IF NOT EXISTS `reservas` (
 ) ENGINE=InnoDB AUTO_INCREMENT=7 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 -- Volcando datos para la tabla railway.reservas: ~6 rows (aproximadamente)
-INSERT INTO `reservas` (`id`, `id_usuario`, `area_deportiva_id`, `fecha`, `hora_inicio`, `hora_fin`, `estado`, `creado_en`) VALUES
-	(1, 2, 16, '2025-06-17', '07:00:00', '08:00:00', 'confirmada', '2025-06-17 07:47:20'),
-	(2, 3, 16, '2025-06-17', '10:00:00', '12:00:00', 'confirmada', '2025-06-17 07:47:20'),
-	(3, 4, 16, '2025-06-17', '16:00:00', '17:30:00', 'confirmada', '2025-06-17 07:47:20'),
-	(4, 2, 18, '2025-06-17', '08:00:00', '09:00:00', 'confirmada', '2025-06-17 07:47:20'),
-	(5, 2, 16, '2025-06-18', '09:00:00', '10:30:00', 'confirmada', '2025-06-17 07:47:20'),
-	(6, 3, 18, '2025-06-18', '15:00:00', '16:30:00', 'pendiente', '2025-06-17 07:47:20');
+INSERT INTO `reservas` (`id`, `id_usuario`, `area_deportiva_id`, `fecha`, `hora_inicio`, `hora_fin`, `estado`, `creado_en`, `culqi_charge_id`, `culqi_order_id`, `monto_pagado`, `metodo_pago`) VALUES
+	(1, 2, 16, '2025-06-17', '07:00:00', '08:00:00', 'confirmada', '2025-06-17 07:47:20', NULL, NULL, NULL, 'culqi'),
+	(2, 3, 16, '2025-06-17', '10:00:00', '12:00:00', 'confirmada', '2025-06-17 07:47:20', NULL, NULL, NULL, 'culqi'),
+	(3, 4, 16, '2025-06-17', '16:00:00', '17:30:00', 'confirmada', '2025-06-17 07:47:20', NULL, NULL, NULL, 'culqi'),
+	(4, 2, 18, '2025-06-17', '08:00:00', '09:00:00', 'confirmada', '2025-06-17 07:47:20', NULL, NULL, NULL, 'culqi'),
+	(5, 2, 16, '2025-06-18', '09:00:00', '10:30:00', 'confirmada', '2025-06-17 07:47:20', NULL, NULL, NULL, 'culqi'),
+	(6, 3, 18, '2025-06-18', '15:00:00', '16:30:00', 'pendiente', '2025-06-17 07:47:20', NULL, NULL, NULL, 'culqi');
 
 -- Volcando estructura para tabla railway.solicitudes_registro
 CREATE TABLE IF NOT EXISTS `solicitudes_registro` (
@@ -450,9 +467,13 @@ CREATE TABLE IF NOT EXISTS `solicitudes_registro` (
   PRIMARY KEY (`id`),
   UNIQUE KEY `email_unico` (`email`),
   UNIQUE KEY `ruc_unico` (`ruc`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=4 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
--- Volcando datos para la tabla railway.solicitudes_registro: ~0 rows (aproximadamente)
+-- Volcando datos para la tabla railway.solicitudes_registro: ~3 rows (aproximadamente)
+INSERT INTO `solicitudes_registro` (`id`, `nombre_institucion`, `ruc`, `email`, `password`, `documento_path`, `estado`, `motivo_rechazo`, `fecha_solicitud`, `fecha_revision`, `revisado_por`) VALUES
+	(1, 'canchaCali', '88888888888', 'ac2022074258@virtual.upt.pe', '$2y$10$Mtq8ALC8kFYe.6VgDUG8uumqJBqfDW3vm16sZQfS70zaGyVPuDQfu', 'https://cdn.filestackcontent.com/C1fy4n68TUOv2xPGyZ8n', 'rechazada', 'Por ser muy CRACK Gaaa', '2025-06-24 20:53:52', '2025-06-25 16:29:40', 1),
+	(2, 'canchapero', '99999999999', 'myrayita2004@gmail.com', '$2y$10$ndWhStrtgsn7lx/3RpZdYueOQJ15ceFgLZyAgw3nRRnaTHFR4S4gK', 'https://cdn.filestackcontent.com/bDeKviLRSwe1Zl66GbP8', 'aprobada', NULL, '2025-06-24 21:14:51', '2025-06-24 22:21:20', 1),
+	(3, 'Victor Cruz Mamani', '12345678901', 'pepito@gmail.com', '$2y$10$vzxkUGK7DwOGFCI4d6Rki.VEARpJo3Ii3Z/zqeJVgHFzxZI526wEO', 'https://cdn.filestackcontent.com/UXmDlyrcT6mx4Y9tQu6H', 'aprobada', NULL, '2025-06-24 23:50:27', '2025-06-24 23:51:31', 1);
 
 -- Volcando estructura para tabla railway.torneos
 CREATE TABLE IF NOT EXISTS `torneos` (
@@ -689,14 +710,19 @@ CREATE TABLE IF NOT EXISTS `usuarios_instalaciones` (
   `estado` tinyint(1) NOT NULL DEFAULT '1',
   `created_at` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
   `tipo_usuario` enum('privado','ipd') COLLATE utf8mb4_general_ci DEFAULT NULL,
+  `culqi_public_key` varchar(255) COLLATE utf8mb4_general_ci DEFAULT NULL,
+  `culqi_secret_key` varchar(255) COLLATE utf8mb4_general_ci DEFAULT NULL,
+  `culqi_enabled` tinyint(1) DEFAULT '0',
   PRIMARY KEY (`id`),
   UNIQUE KEY `username` (`username`)
-) ENGINE=InnoDB AUTO_INCREMENT=3 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=7 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
--- Volcando datos para la tabla railway.usuarios_instalaciones: ~2 rows (aproximadamente)
-INSERT INTO `usuarios_instalaciones` (`id`, `username`, `password`, `estado`, `created_at`, `tipo_usuario`) VALUES
-	(1, 'andy', '$2y$10$IJrd1jNkOJNb73BS68/c.OeQG2R7NQmcuNoktqQINYtBYo1C4moOG', 1, '2025-05-19 17:20:31', 'privado'),
-	(2, 'ipd_tacna', '$2y$10$DetTzM9npZHxn9dufxtAoekAOZBzfmlQ568JEkpg4wIc3VrLJ6XEO', 1, '2025-06-04 20:03:09', 'ipd');
+-- Volcando datos para la tabla railway.usuarios_instalaciones: ~4 rows (aproximadamente)
+INSERT INTO `usuarios_instalaciones` (`id`, `username`, `password`, `estado`, `created_at`, `tipo_usuario`, `culqi_public_key`, `culqi_secret_key`, `culqi_enabled`) VALUES
+	(1, 'andy', '$2y$10$IJrd1jNkOJNb73BS68/c.OeQG2R7NQmcuNoktqQINYtBYo1C4moOG', 1, '2025-05-19 17:20:31', 'privado', 'pk_test_ZQA3KYUMAvDhDXJT', 'sk_test_DthTrZ9s5AVPzLaA', 1),
+	(2, 'ipd_tacna', '$2y$10$DetTzM9npZHxn9dufxtAoekAOZBzfmlQ568JEkpg4wIc3VrLJ6XEO', 1, '2025-06-04 20:03:09', 'ipd', 'pk_test_ZQA3KYUMAvDhDXJT', 'sk_test_DthTrZ9s5AVPzLaA', 1),
+	(5, 'myrayita2004@gmail.com', '$2y$10$ndWhStrtgsn7lx/3RpZdYueOQJ15ceFgLZyAgw3nRRnaTHFR4S4gK', 1, '2025-06-24 22:21:20', 'privado', 'pk_test_ZQA3KYUMAvDhDXJT', 'sk_test_DthTrZ9s5AVPzLaA', 1),
+	(6, 'pepito@gmail.com', '$2y$10$vzxkUGK7DwOGFCI4d6Rki.VEARpJo3Ii3Z/zqeJVgHFzxZI526wEO', 1, '2025-06-24 23:51:31', 'privado', 'pk_test_ZQA3KYUMAvDhDXJT', 'sk_test_DthTrZ9s5AVPzLaA', 1);
 
 /*!40103 SET TIME_ZONE=IFNULL(@OLD_TIME_ZONE, 'system') */;
 /*!40101 SET SQL_MODE=IFNULL(@OLD_SQL_MODE, '') */;

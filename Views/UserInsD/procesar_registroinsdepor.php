@@ -1,4 +1,4 @@
-    <?php
+<?php
 require_once '../../Config/database.php';
 
 $message = '';
@@ -25,15 +25,17 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
         $db = new Database();
         $conn = $db->getConnection();
 
-        // Verificar si el email o RUC ya existen
-        $stmt_check = $conn->prepare("SELECT id FROM solicitudes_registro WHERE email = ? OR ruc = ?");
+        // Verificar si ya existe una solicitud activa (pendiente o aprobada) con el mismo email o RUC
+        $stmt_check = $conn->prepare("SELECT id FROM solicitudes_registro WHERE (email = ? OR ruc = ?) AND estado IN ('pendiente', 'aprobada')");
         $stmt_check->bind_param("ss", $email, $ruc);
         $stmt_check->execute();
         $stmt_check->store_result();
 
         if ($stmt_check->num_rows > 0) {
-            $error = "Ya existe una solicitud con este correo electrónico o RUC.";
+            $error = "Ya existe una solicitud pendiente o aprobada con este correo electrónico o RUC.";
         } else {
+            // Si no hay solicitudes activas, se puede proceder a registrar una nueva
+
             // 3. Hashear la contraseña
             $password_hashed = password_hash($password, PASSWORD_BCRYPT);
 
