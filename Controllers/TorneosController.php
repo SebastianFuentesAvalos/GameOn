@@ -278,53 +278,49 @@ class TorneosController {
 
     // ✅ FUNCIÓN ACTUALIZADA: actualizarTorneo en el controlador
     public function actualizarTorneo() {
-        if (!$this->verificarAutenticacion()) return;
-        
-        if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
-            $this->response(['success' => false, 'message' => 'Método no permitido']);
+        if (session_status() == PHP_SESSION_NONE) {
+            session_start();
         }
         
-        if ($_SESSION['user_type'] !== 'instalacion') {
-            $this->response(['success' => false, 'message' => 'Solo instituciones deportivas pueden editar torneos']);
-        }
-        
-        $input = json_decode(file_get_contents('php://input'), true);
-        $torneoId = $input['torneo_id'] ?? null;
-        
-        if (!$torneoId) {
-            $this->response(['success' => false, 'message' => 'ID de torneo requerido']);
-        }
-        
-        // Verificar permisos
-        if (!$this->torneosModel->verificarPermisosEdicion($torneoId, $_SESSION['user_id'])) {
-            $this->response(['success' => false, 'message' => 'No tienes permisos para editar este torneo']);
-        }
-        
-        $datos = [
-            'estado' => $input['estado'] ?? 'proximo', // ✅ NUEVO CAMPO
-            'nombre' => trim($input['nombre'] ?? ''),
-            'descripcion' => trim($input['descripcion'] ?? ''),
-            'deporte_id' => $input['deporte_id'] ?? 0,
-            'organizador_id' => $_SESSION['user_id'],
-            'max_equipos' => $input['max_equipos'] ?? 16,
-            'fecha_inicio' => $input['fecha_inicio'] ?? '',
-            'fecha_fin' => $input['fecha_fin'] ?? '',
-            'fecha_inscripcion_inicio' => $input['fecha_inscripcion_inicio'] ?? '',
-            'fecha_inscripcion_fin' => $input['fecha_inscripcion_fin'] ?? '',
-            'modalidad' => $input['modalidad'] ?? 'eliminacion_simple',
-            'premio_1' => trim($input['premio_1'] ?? ''),
-            'premio_2' => trim($input['premio_2'] ?? ''),
-            'premio_3' => trim($input['premio_3'] ?? ''),
-            'costo_inscripcion' => $input['costo_inscripcion'] ?? 0.00,
-            'imagen_torneo' => $input['imagen_torneo'] ?? null
-        ];
+        header('Content-Type: application/json');
         
         try {
+            if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+                echo json_encode(['success' => false, 'message' => 'Método no permitido']);
+                exit;
+            }
+            
+            if (!isset($_SESSION['user_id']) || $_SESSION['user_type'] !== 'instalacion') {
+                echo json_encode(['success' => false, 'message' => 'Sin permisos']);
+                exit;
+            }
+            
+            $input = json_decode(file_get_contents('php://input'), true);
+            $torneoId = $input['torneo_id'] ?? null;
+            
+            if (!$torneoId) {
+                echo json_encode(['success' => false, 'message' => 'ID de torneo requerido']);
+                exit;
+            }
+            
+            // ✅ SOLO LOS CAMPOS PERMITIDOS
+            $datos = [
+                'estado' => $input['estado'] ?? 'proximo',
+                'nombre' => trim($input['nombre'] ?? ''),
+                'fecha_inicio' => $input['fecha_inicio'] ?? '',
+                'fecha_fin' => $input['fecha_fin'] ?? '',
+                'fecha_inscripcion_inicio' => $input['fecha_inscripcion_inicio'] ?? '',
+                'fecha_inscripcion_fin' => $input['fecha_inscripcion_fin'] ?? '',
+                'descripcion' => trim($input['descripcion'] ?? '')
+            ];
+            
             $resultado = $this->torneosModel->actualizarTorneo($torneoId, $datos);
-            $this->response($resultado);
+            echo json_encode($resultado);
+            
         } catch (Exception $e) {
-            $this->response(['success' => false, 'message' => 'Error al actualizar torneo: ' . $e->getMessage()]);
+            echo json_encode(['success' => false, 'message' => 'Error: ' . $e->getMessage()]);
         }
+        exit;
     }
 
     // ✅ FUNCIONES EXISTENTES - Mantener como están
@@ -618,6 +614,9 @@ class TorneosController {
                 break;
             case 'obtener_partidos':
                 $this->obtenerPartidosTorneo();
+                break;
+            case 'actualizar_torneo':
+                $this->actualizarTorneo();
                 break;
             default:
                 $this->response(['success' => false, 'message' => 'Acción no válida']);

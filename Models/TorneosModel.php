@@ -56,61 +56,65 @@ class TorneosModel {
 
     // ✅ FUNCIÓN ACTUALIZADA: Actualizar torneo con estado
     public function actualizarTorneo($torneoId, $datos) {
-        // ✅ AGREGAR ESTADO A LA CONSULTA
-        $sql = "UPDATE torneos SET 
-                    nombre = ?, descripcion = ?, deporte_id = ?, 
-                    max_equipos = ?, fecha_inicio = ?, 
-                    fecha_fin = ?, fecha_inscripcion_inicio = ?, fecha_inscripcion_fin = ?,
-                    modalidad = ?, premio_1 = ?, premio_2 = ?, premio_3 = ?, 
-                    costo_inscripcion = ?, imagen_torneo = ?, estado = ?
-                WHERE id = ? AND organizador_id = ?";
-        
-        $stmt = $this->conn->prepare($sql);
-        $stmt->bind_param("ssiiasssssssdsi", 
-            $datos['nombre'],
-            $datos['descripcion'],
-            $datos['deporte_id'],
-            $datos['max_equipos'],
-            $datos['fecha_inicio'],
-            $datos['fecha_fin'],
-            $datos['fecha_inscripcion_inicio'],
-            $datos['fecha_inscripcion_fin'],
-            $datos['modalidad'],
-            $datos['premio_1'],
-            $datos['premio_2'],
-            $datos['premio_3'],
-            $datos['costo_inscripcion'],
-            $datos['imagen_torneo'],
-            $datos['estado'], // ✅ NUEVO CAMPO
-            $torneoId,
-            $datos['organizador_id']
-        );
-        
-        if ($stmt->execute() && $stmt->affected_rows > 0) {
-            return [
-                'success' => true,
-                'message' => 'Torneo actualizado exitosamente'
-            ];
-        } else {
-            return [
-                'success' => false,
-                'message' => 'Error al actualizar el torneo o no tienes permisos'
-            ];
+        try {
+            // ✅ VERIFICAR PERMISOS PRIMERO
+            if (!$this->verificarPermisosEdicion($torneoId, $_SESSION['user_id'])) {
+                return ['success' => false, 'message' => 'No tienes permisos para editar este torneo'];
+            }
+            
+            // ✅ SQL SOLO CON CAMPOS PERMITIDOS
+            $sql = "UPDATE torneos SET 
+                        estado = ?, 
+                        nombre = ?, 
+                        fecha_inicio = ?, 
+                        fecha_fin = ?, 
+                        fecha_inscripcion_inicio = ?, 
+                        fecha_inscripcion_fin = ?, 
+                        descripcion = ?
+                    WHERE id = ?";
+            
+            $stmt = $this->conn->prepare($sql);
+            $stmt->bind_param("sssssssi", 
+                $datos['estado'],
+                $datos['nombre'],
+                $datos['fecha_inicio'],
+                $datos['fecha_fin'],
+                $datos['fecha_inscripcion_inicio'],
+                $datos['fecha_inscripcion_fin'],
+                $datos['descripcion'],
+                $torneoId
+            );
+            
+            if ($stmt->execute() && $stmt->affected_rows > 0) {
+                return ['success' => true, 'message' => 'Torneo actualizado exitosamente'];
+            } else {
+                return ['success' => false, 'message' => 'No se realizaron cambios'];
+            }
+            
+        } catch (Exception $e) {
+            return ['success' => false, 'message' => 'Error en base de datos'];
         }
     }
 
     // ✅ NUEVA FUNCIÓN: Verificar si el usuario puede editar el torneo
     public function verificarPermisosEdicion($torneoId, $usuarioId) {
-        $sql = "SELECT t.id 
-                FROM torneos t
-                INNER JOIN instituciones_deportivas id ON t.institucion_sede_id = id.id
-                WHERE t.id = ? AND id.usuario_instalacion_id = ?";
-        
-        $stmt = $this->conn->prepare($sql);
-        $stmt->bind_param("ii", $torneoId, $usuarioId);
-        $stmt->execute();
-        
-        return $stmt->get_result()->num_rows > 0;
+        try {
+            $sql = "SELECT COUNT(*) as count 
+                    FROM torneos t
+                    INNER JOIN instituciones_deportivas id ON t.institucion_sede_id = id.id
+                    WHERE t.id = ? AND id.usuario_instalacion_id = ?";
+            
+            $stmt = $this->conn->prepare($sql);
+            $stmt->bind_param("ii", $torneoId, $usuarioId);
+            $stmt->execute();
+            $result = $stmt->get_result();
+            $row = $result->fetch_assoc();
+            
+            return $row['count'] > 0;
+            
+        } catch (Exception $e) {
+            return false;
+        }
     }
 
     // ✅ FUNCIONES EXISTENTES - Mantener como están
