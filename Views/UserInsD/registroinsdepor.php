@@ -66,7 +66,7 @@
         </form>
       </div>
       <div class="auth-footer">
-        ¿Ya tienes una cuenta? <a href="login.php">Inicia sesión</a>
+        ¿Ya tienes una cuenta? <a href="../Auth/login.php">Inicia sesión</a>
       </div>
     </div>
 

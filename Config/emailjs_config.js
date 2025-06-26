@@ -13,13 +13,16 @@
 // Configuración principal de EmailJS
 const EMAILJS_CONFIG = {
     // Public Key de tu cuenta EmailJS
-    publicKey: 'Kg-QrgkrkkcEyD0MZ',
+    // Reemplaza 'TU_PUBLIC_KEY_AQUI' con tu nueva Public Key de EmailJS.
+    publicKey: 'dzLw38Sb7Z_XzxzzT',
     
     // Service ID configurado en EmailJS
-    serviceID: 'service_gameon',
+    // Reemplaza 'TU_SERVICE_ID_AQUI' con tu nuevo Service ID.
+    serviceID: 'service_gameon1',
     
     // Template ID para recuperación de contraseña
-    templateID: 'template_password_recove' // Template ID (máximo 25 caracteres)
+    // Reemplaza 'TU_TEMPLATE_ID_AQUI' con tu nuevo Template ID.
+    templateID: 'template_owsx6wo'
 };
 
 /**
