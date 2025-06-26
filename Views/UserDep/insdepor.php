@@ -168,18 +168,6 @@ include_once 'header.php';
                                             data-nombre="<?= htmlspecialchars($instalacion['nombre']) ?>">
                                         <i class="fas fa-map"></i> Mapa
                                     </button>
-                                    
-                                    <button class="action-btn btn-comentarios" data-id="<?= $instalacion['id'] ?>">
-                                        <i class="fas fa-comments"></i> Comentarios
-                                    </button>
-                                    
-                                    <button class="action-btn btn-imagenes" data-id="<?= $instalacion['id'] ?>">
-                                        <i class="fas fa-images"></i> Galería
-                                    </button>
-                                    
-                                    <button class="action-btn btn-reservar" data-id="<?= $instalacion['id'] ?>">
-                                        <i class="fas fa-calendar-plus"></i> RESERVAR AHORA
-                                    </button>
                                 </div>
                                 
                                 <!-- Horarios expandibles -->
