@@ -309,10 +309,10 @@ class ChatManager {
                     </div>
                     <div style="display: flex; gap: 5px;">
                         <button class="btn btn-success btn-sm" onclick="chatManager.responderSolicitud(${solicitud.id}, 'aceptada')">
-                            ✓
+                            ✓ Aceptar
                         </button>
                         <button class="btn btn-danger btn-sm" onclick="chatManager.responderSolicitud(${solicitud.id}, 'rechazada')">
-                            ✗
+                            ✗ Rechazar
                         </button>
                     </div>
                 </div>
@@ -330,25 +330,25 @@ class ChatManager {
                     'Content-Type': 'application/json',
                 },
                 body: JSON.stringify({ 
-                    solicitud_id: solicitudId, 
-                    respuesta: respuesta 
+                    solicitud_id: parseInt(solicitudId),  // ✅ CORRECTO: solicitud_id
+                    respuesta: respuesta                   // ✅ CORRECTO: respuesta
                 })
             });
 
             const result = await response.json();
             
             if (result.success) {
-                this.mostrarExito(respuesta === 'aceptada' ? 'Solicitud aceptada' : 'Solicitud rechazada');
+                this.mostrarExito('✅ ' + (respuesta === 'aceptada' ? 'Solicitud aceptada' : 'Solicitud rechazada'));
                 await this.cargarSolicitudesPendientes();
                 if (respuesta === 'aceptada') {
                     await this.cargarAmigos(); // Recargar amigos si aceptó
                 }
             } else {
-                this.mostrarError(result.message);
+                this.mostrarError('❌ ' + result.message);
             }
         } catch (error) {
-            console.error('Error:', error);
-            this.mostrarError('Error al responder solicitud');
+            console.error('❌ Error completo:', error);
+            this.mostrarError('❌ Error al responder solicitud');
         }
     }
 
