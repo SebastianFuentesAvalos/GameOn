@@ -748,35 +748,33 @@ class ChatManager {
         }
     }
 
-    async responderSolicitud(usuarioId, accion) {
+    async responderSolicitud(solicitudId, respuesta) {
         try {
             const response = await fetch(`${this.baseUrl}?action=responder_solicitud`, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
                 },
-                body: JSON.stringify({
-                    usuario_solicitante_id: usuarioId,
-                    accion: accion
+                body: JSON.stringify({ 
+                    solicitud_id: parseInt(solicitudId),  // ✅ CORRECTO
+                    respuesta: respuesta                   // ✅ CORRECTO
                 })
             });
 
             const result = await response.json();
             
             if (result.success) {
-                const mensaje = accion === 'aceptar' ? 'Solicitud aceptada' : 'Solicitud rechazada';
-                this.mostrarExito(mensaje);
-                
-                // Recargar solicitudes y amigos
-                this.cargarSolicitudesPendientes();
-                this.cargarAmigos();
-                this.buscarUsuarios(); // Actualizar búsqueda
+                this.mostrarExito('✅ ' + (respuesta === 'aceptada' ? 'Solicitud aceptada' : 'Solicitud rechazada'));
+                await this.cargarSolicitudesPendientes();
+                if (respuesta === 'aceptada') {
+                    await this.cargarAmigos();
+                }
             } else {
-                this.mostrarError(result.message);
+                this.mostrarError('❌ ' + result.message);
             }
         } catch (error) {
-            console.error('Error:', error);
-            this.mostrarError('Error procesando solicitud');
+            console.error('❌ Error completo:', error);
+            this.mostrarError('❌ Error al responder solicitud');
         }
     }
 
