@@ -25,7 +25,7 @@ class ChatController {
         }
         
         $input = json_decode(file_get_contents('php://input'), true);
-        $receptor_id = $input['receptor_id'] ?? null;
+        $receptor_id = $input['receptor_id'] ?? null;  // ✅ CORRECTO: receptor_id
         
         if (!$receptor_id) {
             echo json_encode(['success' => false, 'message' => 'ID de receptor requerido']);

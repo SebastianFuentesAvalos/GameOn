@@ -669,6 +669,7 @@ class ChatManager {
         }
     }
 
+    // ✅ CORREGIR LA FUNCIÓN mostrarResultadosBusqueda
     mostrarResultadosBusqueda(usuarios) {
         const container = document.getElementById('resultadosBusqueda');
         
@@ -679,31 +680,9 @@ class ChatManager {
         
         let html = '';
         usuarios.forEach(usuario => {
-            const estadoAmistad = usuario.estado_amistad || 'sin_relacion';
-            let botonAmistad = '';
-            
-            switch (estadoAmistad) {
-                case 'sin_relacion':
-                    botonAmistad = `<button class="btn btn-primary btn-sm" onclick="chatManager.enviarSolicitudAmistad(${usuario.id})">
-                        <i class="fas fa-user-plus"></i> Agregar
-                    </button>`;
-                    break;
-                case 'pendiente_enviada':
-                    botonAmistad = '<span class="badge bg-warning"><i class="fas fa-clock"></i> Solicitud enviada</span>';
-                    break;
-                case 'pendiente_recibida':
-                    botonAmistad = `<div style="display: flex; gap: 5px;">
-                        <button class="btn btn-success btn-sm" onclick="chatManager.responderSolicitud(${usuario.id}, 'aceptar')">
-                            <i class="fas fa-check"></i> Aceptar
-                        </button>
-                        <button class="btn btn-danger btn-sm" onclick="chatManager.responderSolicitud(${usuario.id}, 'rechazar')">
-                            <i class="fas fa-times"></i> Rechazar
-                        </button>
-                    </div>`;
-                    break;
-                case 'aceptada':
-                    botonAmistad = '<span class="badge bg-success"><i class="fas fa-check-circle"></i> Ya son amigos</span>';
-                    break;
+            // ✅ VERIFICAR SI EL USUARIO EXISTE (puede ser null si no se encontró)
+            if (!usuario) {
+                return;
             }
             
             html += `
@@ -718,7 +697,9 @@ class ChatManager {
                         </div>
                     </div>
                     <div style="margin-left: auto;">
-                        ${botonAmistad}
+                        <button class="btn btn-primary btn-sm" onclick="chatManager.enviarSolicitudAmistad(${usuario.id})">
+                            <i class="fas fa-user-plus"></i> Agregar
+                        </button>
                     </div>
                 </div>
             `;
@@ -747,23 +728,23 @@ class ChatManager {
                 headers: {
                     'Content-Type': 'application/json',
                 },
-                body: JSON.stringify({
-                    usuario_receptor_id: usuarioId
+                body: JSON.stringify({ 
+                    receptor_id: parseInt(usuarioId)  // ✅ CAMBIAR A receptor_id
                 })
             });
 
             const result = await response.json();
             
             if (result.success) {
-                this.mostrarExito('Solicitud de amistad enviada');
-                // Actualizar estado del usuario en la búsqueda
+                this.mostrarExito('✅ Solicitud de amistad enviada correctamente');
+                // Actualizar la búsqueda para mostrar el nuevo estado
                 this.buscarUsuarios();
             } else {
-                this.mostrarError(result.message);
+                this.mostrarError('❌ ' + result.message);
             }
         } catch (error) {
             console.error('Error:', error);
-            this.mostrarError('Error enviando solicitud');
+            this.mostrarError('❌ Error enviando solicitud de amistad');
         }
     }
 
