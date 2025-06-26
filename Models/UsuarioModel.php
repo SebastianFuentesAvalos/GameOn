@@ -70,12 +70,11 @@ class UsuarioModel {
         if ($user_type === 'deportista') {
             $stmt = $this->conn->prepare("SELECT id, username, email FROM usuarios_deportistas WHERE email = ? AND estado = 1");
         } else if ($user_type === 'instalacion') {
-            // Para instalaciones, necesitamos obtener el email de la tabla instituciones_deportivas
+            // Para instalaciones, el email se almacena en la columna 'username'
             $stmt = $this->conn->prepare("
-                SELECT ui.id, ui.username, insd.email 
-                FROM usuarios_instalaciones ui 
-                JOIN instituciones_deportivas insd ON ui.id = insd.usuario_id 
-                WHERE insd.email = ? AND ui.estado = 1 AND ui.tipo_usuario = 'privado'
+                SELECT id, username, username as email 
+                FROM usuarios_instalaciones 
+                WHERE username = ? AND estado = 1 AND tipo_usuario = 'privado'
             ");
         } else {
             return false;
