@@ -34,10 +34,7 @@ CREATE TABLE IF NOT EXISTS `amistades` (
   CONSTRAINT `amistades_ibfk_2` FOREIGN KEY (`usuario_receptor_id`) REFERENCES `usuarios_deportistas` (`id`) ON DELETE CASCADE
 ) ENGINE=InnoDB AUTO_INCREMENT=4 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
--- Volcando datos para la tabla gameon.amistades: ~2 rows (aproximadamente)
-INSERT INTO `amistades` (`id`, `usuario_solicitante_id`, `usuario_receptor_id`, `estado`, `fecha_solicitud`, `fecha_respuesta`) VALUES
-	(1, 2, 3, 'aceptada', '2025-06-02 19:24:11', '2025-06-02 19:24:13'),
-	(3, 4, 2, 'aceptada', '2025-06-02 20:01:28', '2025-06-02 20:03:18');
+-- La exportación de datos fue deseleccionada.
 
 -- Volcando estructura para tabla gameon.areas_deportivas
 CREATE TABLE IF NOT EXISTS `areas_deportivas` (
@@ -58,24 +55,7 @@ CREATE TABLE IF NOT EXISTS `areas_deportivas` (
   CONSTRAINT `areas_deportivas_ibfk_2` FOREIGN KEY (`deporte_id`) REFERENCES `deportes` (`id`) ON DELETE CASCADE
 ) ENGINE=InnoDB AUTO_INCREMENT=37 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
--- Volcando datos para la tabla gameon.areas_deportivas: ~16 rows (aproximadamente)
-INSERT INTO `areas_deportivas` (`id`, `institucion_deportiva_id`, `deporte_id`, `nombre_area`, `descripcion`, `capacidad_jugadores`, `tarifa_por_hora`, `estado`, `imagen_area`, `creado_en`) VALUES
-	(16, 1, 1, 'Cancha de Fútbol Principal', 'Cancha de césped sintético con iluminación LED completa', 22, 80.00, 'activa', 'https://i.ibb.co/JWPC8xCW/cancha1.jpg', '2025-06-16 21:44:21'),
-	(17, 1, 1, 'Cancha de Fútbol Secundaria', 'Cancha de césped natural para entrenamientos', 22, 60.00, 'activa', 'https://i.ibb.co/Y7rqxcQ1/ga1.jpg', '2025-06-16 21:44:21'),
-	(20, 1, 3, 'Cancha de Básquet Techada', 'Cancha de básquet con tableros oficiales', 10, 55.00, 'activa', 'https://i.ibb.co/KxBLnrVj/basketball.webp', '2025-06-16 21:44:21'),
-	(21, 2, 1, 'Campo de Fútbol Los Andes', 'Campo de fútbol con césped natural y graderías', 22, 70.00, 'activa', 'https://i.ibb.co/Q397SFmm/images.jpg', '2025-06-16 21:44:51'),
-	(22, 2, 3, 'Cancha de Básquet Principal', 'Cancha de básquet techada con marcador electrónico', 10, 60.00, 'activa', 'https://i.ibb.co/YFJsG1cZ/tablero.webp', '2025-06-16 21:44:51'),
-	(23, 2, 3, 'Cancha de Básquet Entrenamiento', 'Cancha auxiliar para entrenamientos', 10, 45.00, 'activa', 'https://i.ibb.co/KxBLnrVj/basketball.webp', '2025-06-16 21:44:51'),
-	(24, 2, 2, 'Cancha de Vóley Los Andes', 'Cancha de vóley con piso de cemento pulido', 12, 35.00, 'activa', 'https://i.ibb.co/G4QHpwKV/voleibol-libre.jpg', '2025-06-16 21:44:51'),
-	(25, 3, 1, 'Campo Principal del Estadio', 'Campo reglamentario con césped natural y capacidad para 5000 espectadores', 22, 120.00, 'activa', 'https://i.ibb.co/1f4vkrHz/fe.jpg', '2025-06-16 21:44:51'),
-	(26, 3, 2, 'Cancha de Vóley Municipal', 'Cancha oficial para torneos municipales', 12, 45.00, 'activa', 'https://i.ibb.co/fz9YKBbK/fefefe.jpg', '2025-06-16 21:44:51'),
-	(27, 3, 3, 'Cancha de Básquet Municipal', 'Cancha de básquet para eventos municipales', 10, 50.00, 'activa', 'https://i.ibb.co/sdD20DRS/rera.jpg', '2025-06-16 21:44:51'),
-	(28, 3, 1, 'Campo de Entrenamiento', 'Campo auxiliar para entrenamientos y partidos menores', 22, 90.00, 'mantenimiento', 'https://i.ibb.co/C5mV0P8c/gaga.jpg', '2025-06-16 21:44:51'),
-	(30, 5, 1, 'prueba_area', 'prueba area deportiva', 22, 50.00, 'activa', 'https://i.ibb.co/mVMFCw7M/pallardeli.jpg', '2025-06-26 14:14:07'),
-	(33, 1, 2, 'prueba3', 'prueba3', 33, 33.00, 'activa', NULL, '2025-06-26 14:20:16'),
-	(34, 5, 3, 'prueba2', 'prueba2', 22, 22.00, 'activa', NULL, '2025-06-26 14:21:18'),
-	(35, 5, 1, 'prueba3', 'prueba3', 22, 22.00, 'activa', NULL, '2025-06-26 14:25:02'),
-	(36, 5, 1, 'prueba4', 'prueba4', 22, 50.00, 'activa', NULL, '2025-06-26 14:42:10');
+-- La exportación de datos fue deseleccionada.
 
 -- Volcando estructura para tabla gameon.areas_horarios
 CREATE TABLE IF NOT EXISTS `areas_horarios` (
@@ -90,92 +70,7 @@ CREATE TABLE IF NOT EXISTS `areas_horarios` (
   CONSTRAINT `areas_horarios_ibfk_1` FOREIGN KEY (`area_deportiva_id`) REFERENCES `areas_deportivas` (`id`) ON DELETE CASCADE
 ) ENGINE=InnoDB AUTO_INCREMENT=113 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
--- Volcando datos para la tabla gameon.areas_horarios: ~98 rows (aproximadamente)
-INSERT INTO `areas_horarios` (`id`, `area_deportiva_id`, `dia`, `hora_apertura`, `hora_cierre`, `disponible`) VALUES
-	(1, 16, 'Lunes', '06:00:00', '22:00:00', 1),
-	(2, 16, 'Martes', '06:00:00', '22:00:00', 1),
-	(3, 16, 'Miercoles', '06:00:00', '22:00:00', 1),
-	(4, 16, 'Jueves', '06:00:00', '22:00:00', 1),
-	(5, 16, 'Viernes', '06:00:00', '23:00:00', 1),
-	(6, 16, 'Sabado', '07:00:00', '23:00:00', 1),
-	(7, 16, 'Domingo', '08:00:00', '20:00:00', 1),
-	(8, 17, 'Lunes', '07:00:00', '21:00:00', 1),
-	(9, 17, 'Martes', '07:00:00', '21:00:00', 1),
-	(10, 17, 'Miercoles', '07:00:00', '21:00:00', 1),
-	(11, 17, 'Jueves', '07:00:00', '21:00:00', 1),
-	(12, 17, 'Viernes', '07:00:00', '22:00:00', 1),
-	(13, 17, 'Sabado', '08:00:00', '22:00:00', 1),
-	(14, 17, 'Domingo', '09:00:00', '19:00:00', 1),
-	(29, 20, 'Lunes', '07:00:00', '21:00:00', 1),
-	(30, 20, 'Martes', '07:00:00', '21:00:00', 1),
-	(31, 20, 'Miercoles', '07:00:00', '21:00:00', 1),
-	(32, 20, 'Jueves', '07:00:00', '21:00:00', 1),
-	(33, 20, 'Viernes', '07:00:00', '22:00:00', 1),
-	(34, 20, 'Sabado', '08:00:00', '22:00:00', 1),
-	(35, 20, 'Domingo', '09:00:00', '19:00:00', 1),
-	(36, 21, 'Lunes', '06:00:00', '21:00:00', 1),
-	(37, 21, 'Martes', '06:00:00', '21:00:00', 1),
-	(38, 21, 'Miercoles', '06:00:00', '21:00:00', 1),
-	(39, 21, 'Jueves', '06:00:00', '21:00:00', 1),
-	(40, 21, 'Viernes', '06:00:00', '22:00:00', 1),
-	(41, 21, 'Sabado', '07:00:00', '22:00:00', 1),
-	(42, 21, 'Domingo', '08:00:00', '20:00:00', 1),
-	(43, 22, 'Lunes', '07:00:00', '21:00:00', 1),
-	(44, 22, 'Martes', '07:00:00', '21:00:00', 1),
-	(45, 22, 'Miercoles', '07:00:00', '21:00:00', 1),
-	(46, 22, 'Jueves', '07:00:00', '21:00:00', 1),
-	(47, 22, 'Viernes', '07:00:00', '22:00:00', 1),
-	(48, 22, 'Sabado', '08:00:00', '22:00:00', 1),
-	(49, 22, 'Domingo', '09:00:00', '19:00:00', 1),
-	(50, 23, 'Lunes', '08:00:00', '20:00:00', 1),
-	(51, 23, 'Martes', '08:00:00', '20:00:00', 1),
-	(52, 23, 'Miercoles', '08:00:00', '20:00:00', 1),
-	(53, 23, 'Jueves', '08:00:00', '20:00:00', 1),
-	(54, 23, 'Viernes', '08:00:00', '21:00:00', 1),
-	(55, 23, 'Sabado', '09:00:00', '21:00:00', 1),
-	(56, 23, 'Domingo', '10:00:00', '18:00:00', 1),
-	(57, 24, 'Lunes', '07:00:00', '20:00:00', 1),
-	(58, 24, 'Martes', '07:00:00', '20:00:00', 1),
-	(59, 24, 'Miercoles', '07:00:00', '20:00:00', 1),
-	(60, 24, 'Jueves', '07:00:00', '20:00:00', 1),
-	(61, 24, 'Viernes', '07:00:00', '21:00:00', 1),
-	(62, 24, 'Sabado', '08:00:00', '21:00:00', 1),
-	(63, 24, 'Domingo', '09:00:00', '19:00:00', 1),
-	(64, 25, 'Lunes', '08:00:00', '18:00:00', 1),
-	(65, 25, 'Martes', '08:00:00', '18:00:00', 1),
-	(66, 25, 'Miercoles', '08:00:00', '18:00:00', 1),
-	(67, 25, 'Jueves', '08:00:00', '18:00:00', 1),
-	(68, 25, 'Viernes', '08:00:00', '20:00:00', 1),
-	(69, 25, 'Sabado', '09:00:00', '21:00:00', 1),
-	(70, 25, 'Domingo', '10:00:00', '18:00:00', 1),
-	(71, 26, 'Lunes', '07:00:00', '20:00:00', 1),
-	(72, 26, 'Martes', '07:00:00', '20:00:00', 1),
-	(73, 26, 'Miercoles', '07:00:00', '20:00:00', 1),
-	(74, 26, 'Jueves', '07:00:00', '20:00:00', 1),
-	(75, 26, 'Viernes', '07:00:00', '21:00:00', 1),
-	(76, 26, 'Sabado', '08:00:00', '21:00:00', 1),
-	(77, 26, 'Domingo', '09:00:00', '19:00:00', 1),
-	(85, 28, 'Lunes', '00:00:00', '00:00:00', 0),
-	(86, 28, 'Martes', '00:00:00', '00:00:00', 0),
-	(87, 28, 'Miercoles', '00:00:00', '00:00:00', 0),
-	(88, 28, 'Jueves', '00:00:00', '00:00:00', 0),
-	(89, 28, 'Viernes', '00:00:00', '00:00:00', 0),
-	(90, 28, 'Sabado', '00:00:00', '00:00:00', 0),
-	(91, 28, 'Domingo', '00:00:00', '00:00:00', 0),
-	(92, 27, 'Lunes', '08:00:00', '20:00:00', 1),
-	(93, 27, 'Martes', '07:00:00', '20:00:00', 1),
-	(94, 27, 'Miercoles', '07:00:00', '20:00:00', 1),
-	(95, 27, 'Jueves', '07:00:00', '20:00:00', 1),
-	(96, 27, 'Viernes', '07:00:00', '21:00:00', 1),
-	(97, 27, 'Sabado', '08:00:00', '21:00:00', 1),
-	(98, 27, 'Domingo', '09:00:00', '19:00:00', 1),
-	(106, 30, 'Lunes', '07:00:00', '21:00:00', 1),
-	(107, 30, 'Martes', '07:00:00', '21:00:00', 1),
-	(108, 30, 'Miercoles', '07:00:00', '21:00:00', 1),
-	(109, 30, 'Jueves', '07:00:00', '21:00:00', 1),
-	(110, 30, 'Viernes', '07:00:00', '21:00:00', 1),
-	(111, 30, 'Sabado', '07:00:00', '21:00:00', 1),
-	(112, 30, 'Domingo', '07:00:00', '21:00:00', 1);
+-- La exportación de datos fue deseleccionada.
 
 -- Volcando estructura para tabla gameon.deportes
 CREATE TABLE IF NOT EXISTS `deportes` (
@@ -184,11 +79,7 @@ CREATE TABLE IF NOT EXISTS `deportes` (
   PRIMARY KEY (`id`)
 ) ENGINE=InnoDB AUTO_INCREMENT=4 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
--- Volcando datos para la tabla gameon.deportes: ~3 rows (aproximadamente)
-INSERT INTO `deportes` (`id`, `nombre`) VALUES
-	(1, 'futbol'),
-	(2, 'voley'),
-	(3, 'basquet');
+-- La exportación de datos fue deseleccionada.
 
 -- Volcando estructura para tabla gameon.equipos
 CREATE TABLE IF NOT EXISTS `equipos` (
@@ -208,13 +99,7 @@ CREATE TABLE IF NOT EXISTS `equipos` (
   CONSTRAINT `equipos_ibfk_2` FOREIGN KEY (`creador_id`) REFERENCES `usuarios_deportistas` (`id`) ON DELETE CASCADE
 ) ENGINE=InnoDB AUTO_INCREMENT=6 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
--- Volcando datos para la tabla gameon.equipos: ~5 rows (aproximadamente)
-INSERT INTO `equipos` (`id`, `nombre`, `descripcion`, `deporte_id`, `creador_id`, `limite_miembros`, `privado`, `estado`, `creado_en`) VALUES
-	(1, 'FC Vodka Juniors', 'La nueva generación de apasionados por el deporte y la chela', 1, 2, 10, 1, 1, '2025-06-02 19:38:20'),
-	(2, 'Las Mariposas', 'Somos mariposas en la cancha de voley xd', 2, 2, 10, 1, 1, '2025-06-02 21:34:35'),
-	(3, 'Los Negros James', 'Somos los mas negros de todo Tacna, tiemblen ante nuestro Bascket de negros', 3, 2, 10, 1, 1, '2025-06-03 21:53:45'),
-	(4, 'Los cojos de EPIS', 'Somos mariposas', 1, 2, 10, 0, 1, '2025-06-06 00:03:00'),
-	(5, 'mongosdeverdad', 'dffdfdf', 1, 2, 10, 0, 1, '2025-06-06 00:21:20');
+-- La exportación de datos fue deseleccionada.
 
 -- Volcando estructura para tabla gameon.equipo_miembros
 CREATE TABLE IF NOT EXISTS `equipo_miembros` (
@@ -230,20 +115,7 @@ CREATE TABLE IF NOT EXISTS `equipo_miembros` (
   CONSTRAINT `equipo_miembros_ibfk_2` FOREIGN KEY (`usuario_id`) REFERENCES `usuarios_deportistas` (`id`) ON DELETE CASCADE
 ) ENGINE=InnoDB AUTO_INCREMENT=13 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
--- Volcando datos para la tabla gameon.equipo_miembros: ~12 rows (aproximadamente)
-INSERT INTO `equipo_miembros` (`id`, `equipo_id`, `usuario_id`, `rol`, `fecha_union`) VALUES
-	(1, 1, 2, 'creador', '2025-06-02 19:38:20'),
-	(2, 2, 2, 'creador', '2025-06-02 21:34:35'),
-	(3, 1, 3, 'miembro', '2025-06-03 21:31:29'),
-	(4, 2, 4, 'miembro', '2025-06-03 21:31:35'),
-	(5, 1, 4, 'miembro', '2025-06-03 21:33:52'),
-	(6, 3, 2, 'creador', '2025-06-03 21:53:45'),
-	(7, 3, 3, 'miembro', '2025-06-04 21:32:01'),
-	(8, 4, 2, 'creador', '2025-06-06 00:03:00'),
-	(9, 4, 4, 'miembro', '2025-06-06 00:03:24'),
-	(10, 5, 2, 'creador', '2025-06-06 00:21:20'),
-	(11, 5, 3, 'miembro', '2025-06-06 00:21:42'),
-	(12, 5, 4, 'miembro', '2025-06-06 00:21:53');
+-- La exportación de datos fue deseleccionada.
 
 -- Volcando estructura para tabla gameon.horarios_atencion
 CREATE TABLE IF NOT EXISTS `horarios_atencion` (
@@ -257,29 +129,7 @@ CREATE TABLE IF NOT EXISTS `horarios_atencion` (
   CONSTRAINT `horarios_atencion_ibfk_1` FOREIGN KEY (`institucion_deportiva_id`) REFERENCES `instituciones_deportivas` (`id`) ON DELETE CASCADE
 ) ENGINE=InnoDB AUTO_INCREMENT=22 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
--- Volcando datos para la tabla gameon.horarios_atencion: ~21 rows (aproximadamente)
-INSERT INTO `horarios_atencion` (`id`, `institucion_deportiva_id`, `dia`, `hora_apertura`, `hora_cierre`) VALUES
-	(1, 1, 'Lunes', '07:00:00', '22:00:00'),
-	(2, 1, 'Martes', '07:00:00', '22:00:00'),
-	(3, 1, 'Miercoles', '07:00:00', '22:00:00'),
-	(4, 1, 'Jueves', '07:00:00', '22:00:00'),
-	(5, 1, 'Viernes', '07:00:00', '23:00:00'),
-	(6, 1, 'Sabado', '08:00:00', '23:00:00'),
-	(7, 1, 'Domingo', '08:00:00', '20:00:00'),
-	(8, 2, 'Lunes', '06:00:00', '21:00:00'),
-	(9, 2, 'Martes', '06:00:00', '21:00:00'),
-	(10, 2, 'Miercoles', '06:00:00', '21:00:00'),
-	(11, 2, 'Jueves', '06:00:00', '21:00:00'),
-	(12, 2, 'Viernes', '06:00:00', '21:00:00'),
-	(13, 2, 'Sabado', '08:00:00', '22:00:00'),
-	(14, 2, 'Domingo', '08:00:00', '19:00:00'),
-	(15, 3, 'Lunes', '08:00:00', '22:00:00'),
-	(16, 3, 'Martes', '08:00:00', '22:00:00'),
-	(17, 3, 'Miercoles', '08:00:00', '22:00:00'),
-	(18, 3, 'Jueves', '08:00:00', '22:00:00'),
-	(19, 3, 'Viernes', '08:00:00', '23:30:00'),
-	(20, 3, 'Sabado', '09:00:00', '23:30:00'),
-	(21, 3, 'Domingo', '09:00:00', '21:00:00');
+-- La exportación de datos fue deseleccionada.
 
 -- Volcando estructura para tabla gameon.instalaciones_ocupaciones
 CREATE TABLE IF NOT EXISTS `instalaciones_ocupaciones` (
@@ -319,7 +169,7 @@ CREATE TABLE IF NOT EXISTS `instalaciones_ocupaciones` (
   CONSTRAINT `ocupaciones_ibfk_7` FOREIGN KEY (`creado_por_usuario_id`) REFERENCES `usuarios_deportistas` (`id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
--- Volcando datos para la tabla gameon.instalaciones_ocupaciones: ~0 rows (aproximadamente)
+-- La exportación de datos fue deseleccionada.
 
 -- Volcando estructura para tabla gameon.instituciones_deportes
 CREATE TABLE IF NOT EXISTS `instituciones_deportes` (
@@ -331,17 +181,7 @@ CREATE TABLE IF NOT EXISTS `instituciones_deportes` (
   CONSTRAINT `instituciones_deportes_ibfk_2` FOREIGN KEY (`deporte_id`) REFERENCES `deportes` (`id`) ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
--- Volcando datos para la tabla gameon.instituciones_deportes: ~9 rows (aproximadamente)
-INSERT INTO `instituciones_deportes` (`institucion_deportiva_id`, `deporte_id`) VALUES
-	(1, 1),
-	(2, 1),
-	(2, 2),
-	(2, 3),
-	(3, 1),
-	(3, 3),
-	(4, 1),
-	(4, 2),
-	(4, 3);
+-- La exportación de datos fue deseleccionada.
 
 -- Volcando estructura para tabla gameon.instituciones_deportivas
 CREATE TABLE IF NOT EXISTS `instituciones_deportivas` (
@@ -364,13 +204,7 @@ CREATE TABLE IF NOT EXISTS `instituciones_deportivas` (
   CONSTRAINT `instituciones_deportivas_ibfk_1` FOREIGN KEY (`usuario_instalacion_id`) REFERENCES `usuarios_instalaciones` (`id`) ON DELETE CASCADE
 ) ENGINE=InnoDB AUTO_INCREMENT=6 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
--- Volcando datos para la tabla gameon.instituciones_deportivas: ~4 rows (aproximadamente)
-INSERT INTO `instituciones_deportivas` (`id`, `usuario_instalacion_id`, `nombre`, `direccion`, `latitud`, `longitud`, `imagen`, `tarifa`, `calificacion`, `telefono`, `email`, `descripcion`, `estado`, `creado_en`) VALUES
-	(1, 1, 'Top Gol Tacna', 'Av. Bolognesi 1234, Tacna', -17.99927959, -70.23738205, 'https://i.ibb.co/dJG8hdzS/images.png', 51.00, 4.50, '946143071', 'contacto@topgoltacna.com', 'Canchas de fútbol con césped sintético de primera calidad PREMIUM', 1, '2025-05-21 19:15:21'),
-	(2, 1, 'Complejo Deportivo Municipal', 'Calle Patricio Meléndez 500, Tacna', -18.01220000, -70.25360000, 'https://i.ibb.co/Qvc2gsKS/complejodeportivo.jpg', 35.00, 4.20, '052987654', 'deportes@munitacna.gob.pe', 'Complejo deportivo municipal con múltiples canchas', 1, '2025-05-21 19:15:21'),
-	(3, 1, 'Club Deportivo Tacna', 'Av. Cusco 750, Tacna', -18.00550000, -70.23980000, 'https://i.ibb.co/gb2kHZCq/111111.jpg', 65.00, 4.80, '052456789', 'info@clubdeportivotacna.com', 'Club exclusivo con instalaciones de primer nivel', 1, '2025-05-21 19:15:21'),
-	(4, 2, 'IPD Tacna - Complejo Deportivo', 'Av. Gregorio Albarracín s/n, Tacna', -18.01500000, -70.25800000, NULL, 0.00, 5.00, '052-427070', 'ipd.tacna@ipd.gob.pe', 'Complejo deportivo del Instituto Peruano del Deporte', 1, '2025-06-04 20:03:09'),
-	(5, 3, 'Prueba', 'Av. Bolognesi 1954, Tacna', 0.00000000, 0.00000000, 'https://i.ibb.co/d017CbQR/complejodeportivo.jpg', 40.00, 0.00, '946143071', 'prueba@prueba.com', 'Prueba', 1, '2025-06-26 14:13:32');
+-- La exportación de datos fue deseleccionada.
 
 -- Volcando estructura para tabla gameon.reservas
 CREATE TABLE IF NOT EXISTS `reservas` (
@@ -395,16 +229,7 @@ CREATE TABLE IF NOT EXISTS `reservas` (
   CONSTRAINT `reservas_ibfk_usuario` FOREIGN KEY (`id_usuario`) REFERENCES `usuarios_deportistas` (`id`) ON DELETE CASCADE
 ) ENGINE=InnoDB AUTO_INCREMENT=11 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
--- Volcando datos para la tabla gameon.reservas: ~10 rows (aproximadamente)
-INSERT INTO `reservas` (`id`, `id_usuario`, `area_deportiva_id`, `fecha`, `hora_inicio`, `hora_fin`, `estado`, `creado_en`, `culqi_charge_id`, `culqi_order_id`, `monto_pagado`, `metodo_pago`, `paypal_payment_id`, `paypal_payer_id`) VALUES
-	(1, 2, 16, '2025-06-17', '07:00:00', '08:00:00', 'confirmada', '2025-06-17 07:47:20', NULL, NULL, NULL, 'culqi', NULL, NULL),
-	(2, 3, 16, '2025-06-17', '10:00:00', '12:00:00', 'confirmada', '2025-06-17 07:47:20', NULL, NULL, NULL, 'culqi', NULL, NULL),
-	(3, 4, 16, '2025-06-17', '16:00:00', '17:30:00', 'confirmada', '2025-06-17 07:47:20', NULL, NULL, NULL, 'culqi', NULL, NULL),
-	(5, 2, 16, '2025-06-18', '09:00:00', '10:30:00', 'confirmada', '2025-06-17 07:47:20', NULL, NULL, NULL, 'culqi', NULL, NULL),
-	(7, 2, 16, '2025-06-25', '09:00:00', '10:00:00', 'confirmada', '2025-06-24 21:27:07', 'chr_sim_1750800427258', NULL, 83.00, 'culqi', NULL, NULL),
-	(8, 2, 16, '2025-06-25', '20:00:00', '22:00:00', 'confirmada', '2025-06-25 07:07:19', NULL, NULL, 166.00, 'paypal', '0UP48374UC7197730', 'Q2A3J85GL8AFW'),
-	(9, 2, 16, '2025-06-28', '13:00:00', '15:00:00', 'confirmada', '2025-06-25 07:09:03', NULL, NULL, 166.00, 'paypal', '8EH47394FE342324F', 'Q2A3J85GL8AFW'),
-	(10, 2, 16, '2025-06-30', '17:00:00', '18:00:00', 'confirmada', '2025-06-25 14:38:36', NULL, NULL, 1.00, 'paypal', '7WA72804PX6443303', 'DP7ZZ67LYCKYE');
+-- La exportación de datos fue deseleccionada.
 
 -- Volcando estructura para tabla gameon.torneos
 CREATE TABLE IF NOT EXISTS `torneos` (
@@ -440,9 +265,7 @@ CREATE TABLE IF NOT EXISTS `torneos` (
   CONSTRAINT `torneos_ibfk_2` FOREIGN KEY (`institucion_sede_id`) REFERENCES `instituciones_deportivas` (`id`) ON DELETE CASCADE
 ) ENGINE=InnoDB AUTO_INCREMENT=9 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
--- Volcando datos para la tabla gameon.torneos: ~1 rows (aproximadamente)
-INSERT INTO `torneos` (`id`, `nombre`, `descripcion`, `deporte_id`, `organizador_tipo`, `organizador_id`, `institucion_sede_id`, `max_equipos`, `equipos_inscritos`, `fecha_inicio`, `fecha_fin`, `fecha_inscripcion_inicio`, `fecha_inscripcion_fin`, `estado`, `modalidad`, `premio_1`, `premio_2`, `premio_3`, `costo_inscripcion`, `imagen_torneo`, `creado_en`, `actualizado_en`) VALUES
-	(7, 'CHAMPIONS LEAGUE TACNA - APERTURA I', 'La mejor edición Champions Tacna, ven, juega y gana y demuestra tus habilidades con tu equipo!', 1, 'institucion', 1, 1, 4, 1, '2025-07-20', '2025-07-20', '2025-06-30', '2025-07-10', 'inscripciones_abiertas', 'eliminacion_simple', 'Un arroz con Huevo', 'Un huevo sin arroz', 'Un arroz sin huevo', 1.00, 'https://i.ibb.co/BHQxk6nj/3d686d3b1636.jpg', '2025-06-19 03:00:18', '2025-06-25 17:57:41');
+-- La exportación de datos fue deseleccionada.
 
 -- Volcando estructura para tabla gameon.torneos_equipos
 CREATE TABLE IF NOT EXISTS `torneos_equipos` (
@@ -467,9 +290,7 @@ CREATE TABLE IF NOT EXISTS `torneos_equipos` (
   CONSTRAINT `torneos_equipos_ibfk_3` FOREIGN KEY (`inscrito_por_usuario_id`) REFERENCES `usuarios_deportistas` (`id`)
 ) ENGINE=InnoDB AUTO_INCREMENT=4 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
--- Volcando datos para la tabla gameon.torneos_equipos: ~0 rows (aproximadamente)
-INSERT INTO `torneos_equipos` (`id`, `torneo_id`, `equipo_id`, `inscrito_por_usuario_id`, `fecha_inscripcion`, `estado_inscripcion`, `metodo_pago`, `transaction_id`, `payer_id`, `monto_pagado`, `comentarios`) VALUES
-	(3, 7, 1, 2, '2025-06-25 17:57:41', 'confirmada', 'paypal', '8V850316691540421', 'DP7ZZ67LYCKYE', 1.00, NULL);
+-- La exportación de datos fue deseleccionada.
 
 -- Volcando estructura para tabla gameon.torneos_estadisticas
 CREATE TABLE IF NOT EXISTS `torneos_estadisticas` (
@@ -491,7 +312,7 @@ CREATE TABLE IF NOT EXISTS `torneos_estadisticas` (
   CONSTRAINT `torneos_estadisticas_ibfk_2` FOREIGN KEY (`equipo_id`) REFERENCES `equipos` (`id`) ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
--- Volcando datos para la tabla gameon.torneos_estadisticas: ~0 rows (aproximadamente)
+-- La exportación de datos fue deseleccionada.
 
 -- Volcando estructura para tabla gameon.torneos_partidos
 CREATE TABLE IF NOT EXISTS `torneos_partidos` (
@@ -529,11 +350,7 @@ CREATE TABLE IF NOT EXISTS `torneos_partidos` (
   CONSTRAINT `torneos_partidos_ibfk_area` FOREIGN KEY (`area_deportiva_id`) REFERENCES `areas_deportivas` (`id`) ON DELETE SET NULL
 ) ENGINE=InnoDB AUTO_INCREMENT=26 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
--- Volcando datos para la tabla gameon.torneos_partidos: ~4 rows (aproximadamente)
-INSERT INTO `torneos_partidos` (`id`, `torneo_id`, `area_deportiva_id`, `equipo_local_id`, `equipo_visitante_id`, `fase`, `numero_partido`, `ronda`, `descripcion_partido`, `numero_grupo`, `fecha_partido`, `resultado_local`, `resultado_visitante`, `equipo_ganador_id`, `estado_partido`, `observaciones`, `creado_en`) VALUES
-	(20, 7, 16, NULL, NULL, 'primera_ronda', NULL, NULL, 'Partido 1', NULL, '2025-07-20 08:00:00', NULL, NULL, NULL, 'programado', NULL, '2025-06-19 03:00:18'),
-	(21, 7, 17, NULL, NULL, 'primera_ronda', NULL, NULL, 'Partido 2', NULL, '2025-07-20 09:00:00', NULL, NULL, NULL, 'programado', NULL, '2025-06-19 03:00:18'),
-	(22, 7, 16, NULL, NULL, 'segunda_ronda', NULL, NULL, 'Partido 3', NULL, '2025-07-20 10:00:00', NULL, NULL, NULL, 'programado', NULL, '2025-06-19 03:00:18');
+-- La exportación de datos fue deseleccionada.
 
 -- Volcando estructura para tabla gameon.torneos_partidos_asistencias
 CREATE TABLE IF NOT EXISTS `torneos_partidos_asistencias` (
@@ -553,7 +370,7 @@ CREATE TABLE IF NOT EXISTS `torneos_partidos_asistencias` (
   CONSTRAINT `torneos_partidos_asistencias_ibfk_4` FOREIGN KEY (`gol_id`) REFERENCES `torneos_partidos_goleadores` (`id`) ON DELETE SET NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
--- Volcando datos para la tabla gameon.torneos_partidos_asistencias: ~0 rows (aproximadamente)
+-- La exportación de datos fue deseleccionada.
 
 -- Volcando estructura para tabla gameon.torneos_partidos_estadisticas
 CREATE TABLE IF NOT EXISTS `torneos_partidos_estadisticas` (
@@ -573,7 +390,7 @@ CREATE TABLE IF NOT EXISTS `torneos_partidos_estadisticas` (
   CONSTRAINT `torneos_partidos_estadisticas_ibfk_3` FOREIGN KEY (`mvp_jugador_id`) REFERENCES `usuarios_deportistas` (`id`) ON DELETE SET NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
--- Volcando datos para la tabla gameon.torneos_partidos_estadisticas: ~0 rows (aproximadamente)
+-- La exportación de datos fue deseleccionada.
 
 -- Volcando estructura para tabla gameon.torneos_partidos_goleadores
 CREATE TABLE IF NOT EXISTS `torneos_partidos_goleadores` (
@@ -592,7 +409,7 @@ CREATE TABLE IF NOT EXISTS `torneos_partidos_goleadores` (
   CONSTRAINT `torneos_partidos_goleadores_ibfk_3` FOREIGN KEY (`equipo_id`) REFERENCES `equipos` (`id`) ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
--- Volcando datos para la tabla gameon.torneos_partidos_goleadores: ~0 rows (aproximadamente)
+-- La exportación de datos fue deseleccionada.
 
 -- Volcando estructura para tabla gameon.usuarios_deportes
 CREATE TABLE IF NOT EXISTS `usuarios_deportes` (
@@ -604,10 +421,7 @@ CREATE TABLE IF NOT EXISTS `usuarios_deportes` (
   CONSTRAINT `usuarios_deportes_ibfk_2` FOREIGN KEY (`deporte_id`) REFERENCES `deportes` (`id`) ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
--- Volcando datos para la tabla gameon.usuarios_deportes: ~2 rows (aproximadamente)
-INSERT INTO `usuarios_deportes` (`usuario_id`, `deporte_id`) VALUES
-	(2, 1),
-	(2, 3);
+-- La exportación de datos fue deseleccionada.
 
 -- Volcando estructura para tabla gameon.usuarios_deportistas
 CREATE TABLE IF NOT EXISTS `usuarios_deportistas` (
@@ -627,13 +441,7 @@ CREATE TABLE IF NOT EXISTS `usuarios_deportistas` (
   UNIQUE KEY `username` (`username`)
 ) ENGINE=InnoDB AUTO_INCREMENT=7 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
--- Volcando datos para la tabla gameon.usuarios_deportistas: ~4 rows (aproximadamente)
-INSERT INTO `usuarios_deportistas` (`id`, `nombre`, `apellidos`, `email`, `telefono`, `fecha_nacimiento`, `genero`, `nivel_habilidad`, `username`, `password`, `estado`, `creado_en`) VALUES
-	(2, 'Sebastian Nicolás', 'Fuentes Avalos', 'fuentessebastiansa4s@gmail.com', '946143071', '2005-01-18', 'Masculino', 'Intermedio', 'Chevi10', '$2y$10$IJrd1jNkOJNb73BS68/c.OeQG2R7NQmcuNoktqQINYtBYo1C4moOG', 1, '2025-05-19 19:10:38'),
-	(3, 'Gabriela', 'Gutierrez Mamane', 'gabrielaga@gmail.com', '946143071', '2002-11-03', 'Feminino', 'Principiante', 'GabyGol', '$2y$10$DetTzM9npZHxn9dufxtAoekAOZBzfmlQ568JEkpg4wIc3VrLJ6XEO', 1, '2025-05-19 20:24:19'),
-	(4, 'Victor', 'Cruz Mamani', 'victor@gmail.com', '946143072', '2001-06-02', 'Masculino', 'Principiante', 'Chamo', '$2y$10$DetTzM9npZHxn9dufxtAoekAOZBzfmlQ568JEkpg4wIc3VrLJ6XEO', 1, '2025-06-02 19:48:23'),
-	(5, 'gaby', 'Gutierez', 'gg2022074263@virtual.upt.pe', '952722656', '2003-11-03', '', '', 'Gaby', '$2y$10$j2i/8zrEyibF0S53PQwhVO3PtHaKs7slDUIdHz5/wJD2.xzsakLAW', 1, '2025-06-17 16:39:02'),
-	(6, 'Pepito', 'Fuentes', 'chevichin2018@gmail.com', '946143071', '2005-01-19', 'Masculino', 'Principiante', 'Pepito', '$2y$10$huprR.D9Z4EszBeWKAh48uItY/BybbKHEpk3dh/h92Xv2X.CYEXKa', 1, '2025-06-25 18:29:01');
+-- La exportación de datos fue deseleccionada.
 
 -- Volcando estructura para tabla gameon.usuarios_instalaciones
 CREATE TABLE IF NOT EXISTS `usuarios_instalaciones` (
@@ -654,11 +462,7 @@ CREATE TABLE IF NOT EXISTS `usuarios_instalaciones` (
   UNIQUE KEY `username` (`username`)
 ) ENGINE=InnoDB AUTO_INCREMENT=4 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
--- Volcando datos para la tabla gameon.usuarios_instalaciones: ~3 rows (aproximadamente)
-INSERT INTO `usuarios_instalaciones` (`id`, `username`, `password`, `estado`, `created_at`, `tipo_usuario`, `culqi_public_key`, `culqi_secret_key`, `culqi_enabled`, `paypal_client_id`, `paypal_client_secret`, `paypal_enabled`, `paypal_sandbox`) VALUES
-	(1, 'andy', '$2y$10$IJrd1jNkOJNb73BS68/c.OeQG2R7NQmcuNoktqQINYtBYo1C4moOG', 1, '2025-05-19 17:20:31', 'privado', 'pk_test_ZQA3KYUMAvDhDXJT', 'sk_test_DthTrZ9s5AVPzLaA', 1, 'AeWyuNiQwns7OywCQ6yopDJt_eJl12Vn09X1wR19o1nK8lGSuLvMBfdssaEuf4j27SrH42UAf7N7XR2X', 'EAibjcVLXcACZnaShTgjSx7nueoDXT5h_-ohi1nX2lmSzehBC5On-Uo2OoJgkgTHAzpujWpnEBJPot-q', 1, 0),
-	(2, 'ipd_tacna', '$2y$10$DetTzM9npZHxn9dufxtAoekAOZBzfmlQ568JEkpg4wIc3VrLJ6XEO', 1, '2025-06-04 20:03:09', 'ipd', 'pk_test_ZQA3KYUMAvDhDXJT', 'sk_test_DthTrZ9s5AVPzLaA', 1, 'AegRaM9fGG88DaPr0FxesDItgSSzf7466v9COO99qEjwSiissrWNgIMRRxFlyLgS73qWj8Op7eGGc6bf', 'EDh6ZHHOOpFBiYs2Y4TN4OVzePQnt5u3iYn19OIX5c-6aXqGUK01NVROqPjMnpELAatYYazJk9m7gWs1', 1, 0),
-	(3, 'prueba', '$2y$10$IJrd1jNkOJNb73BS68/c.OeQG2R7NQmcuNoktqQINYtBYo1C4moOG', 1, '2025-06-26 14:10:34', 'privado', NULL, NULL, 0, NULL, NULL, 0, 1);
+-- La exportación de datos fue deseleccionada.
 
 /*!40103 SET TIME_ZONE=IFNULL(@OLD_TIME_ZONE, 'system') */;
 /*!40101 SET SQL_MODE=IFNULL(@OLD_SQL_MODE, '') */;

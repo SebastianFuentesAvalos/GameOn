@@ -612,6 +612,9 @@ class TorneosController {
             case 'inscribir_equipo_paypal':
                 $this->inscribirEquipoConPayPal();
                 break;
+            case 'inscribir_equipo_gratis':
+                $this->inscribirEquipoGratis();
+                break;
             case 'obtener_partidos':
                 $this->obtenerPartidosTorneo();
                 break;
@@ -656,6 +659,37 @@ class TorneosController {
             ]);
             
         } catch (Exception $e) {
+            $this->response(['success' => false, 'message' => 'Error: ' . $e->getMessage()]);
+        }
+    }
+
+    // ✅ AGREGAR ESTA FUNCIÓN AL CONTROLADOR (después de inscribirEquipoConPayPal):
+    public function inscribirEquipoGratis() {
+        if (!$this->verificarAutenticacion()) return;
+        
+        try {
+            $input = json_decode(file_get_contents('php://input'), true);
+            
+            $torneoId = $input['torneo_id'] ?? null;
+            $equipoId = $input['equipo_id'] ?? null;
+            
+            if (!$torneoId || !$equipoId) {
+                throw new Exception('Datos insuficientes para la inscripción');
+            }
+            
+            // ✅ VERIFICAR QUE EL TORNEO SEA REALMENTE GRATUITO
+            $torneo = $this->torneosModel->obtenerTorneoPorId($torneoId);
+            if (!$torneo || floatval($torneo['costo_inscripcion']) > 0) {
+                throw new Exception('Este torneo no es gratuito');
+            }
+            
+            // ✅ USAR LA FUNCIÓN EXISTENTE PERO SIN PAGO
+            $resultado = $this->torneosModel->inscribirEquipoGratis($torneoId, $equipoId);
+            
+            $this->response($resultado);
+            
+        } catch (Exception $e) {
+            error_log("Error inscripción gratuita: " . $e->getMessage());
             $this->response(['success' => false, 'message' => 'Error: ' . $e->getMessage()]);
         }
     }

@@ -647,5 +647,89 @@ class TorneosModel {
         $stmt->execute();
         return $stmt->get_result()->fetch_all(MYSQLI_ASSOC);
     }
+
+    // ✅ AGREGAR ESTA FUNCIÓN AL MODELO (después de inscribirEquipoConPago):
+    public function inscribirEquipoGratis($torneoId, $equipoId) {
+        try {
+            // ✅ VERIFICAR QUE EL TORNEO TENGA CUPOS
+            $query = "SELECT t.max_equipos, COUNT(te.id) as equipos_inscritos, t.costo_inscripcion
+                      FROM torneos t
+                      LEFT JOIN torneos_equipos te ON t.id = te.torneo_id
+                      WHERE t.id = ? AND t.estado = 'inscripciones_abiertas'
+                      GROUP BY t.id";
+            
+            $stmt = $this->conn->prepare($query);
+            $stmt->bind_param("i", $torneoId);
+            $stmt->execute();
+            $result = $stmt->get_result();
+            $torneo = $result->fetch_assoc();
+            $stmt->close();
+            
+            if (!$torneo) {
+                return ['success' => false, 'message' => 'Torneo no encontrado o inscripciones cerradas'];
+            }
+            
+            // ✅ VERIFICAR QUE SEA GRATUITO
+            if (floatval($torneo['costo_inscripcion']) > 0) {
+                return ['success' => false, 'message' => 'Este torneo no es gratuito'];
+            }
+            
+            if ($torneo['equipos_inscritos'] >= $torneo['max_equipos']) {
+                return ['success' => false, 'message' => 'No hay cupos disponibles'];
+            }
+            
+            // ✅ VERIFICAR QUE EL EQUIPO NO ESTÉ YA INSCRITO
+            if ($this->verificarEquipoYaInscrito($torneoId, $equipoId)) {
+                return ['success' => false, 'message' => 'El equipo ya está inscrito en este torneo'];
+            }
+            
+            // ✅ OBTENER USUARIO_ID DEL CREADOR DEL EQUIPO
+            $queryCreador = "SELECT creador_id FROM equipos WHERE id = ?";
+            $stmtCreador = $this->conn->prepare($queryCreador);
+            $stmtCreador->bind_param("i", $equipoId);
+            $stmtCreador->execute();
+            $resultCreador = $stmtCreador->get_result();
+            $equipo = $resultCreador->fetch_assoc();
+            $stmtCreador->close();
+            
+            if (!$equipo) {
+                return ['success' => false, 'message' => 'Equipo no encontrado'];
+            }
+            
+            // ✅ INSERTAR INSCRIPCIÓN GRATUITA
+            $queryInsert = "INSERT INTO torneos_equipos 
+                           (torneo_id, equipo_id, inscrito_por_usuario_id, fecha_inscripcion, estado_inscripcion, metodo_pago, monto_pagado) 
+                           VALUES (?, ?, ?, NOW(), 'confirmada', 'gratuito', 0.00)";
+        
+            $stmt = $this->conn->prepare($queryInsert);
+            $stmt->bind_param("iii", $torneoId, $equipoId, $equipo['creador_id']);
+        
+            if ($stmt->execute()) {
+                $inscripcionId = $this->conn->insert_id;
+                $stmt->close();
+                
+                // ✅ ACTUALIZAR CONTADOR DE EQUIPOS INSCRITOS EN EL TORNEO
+                $queryActualizar = "UPDATE torneos SET equipos_inscritos = equipos_inscritos + 1 WHERE id = ?";
+                $stmtActualizar = $this->conn->prepare($queryActualizar);
+                $stmtActualizar->bind_param("i", $torneoId);
+                $stmtActualizar->execute();
+                $stmtActualizar->close();
+                
+                return [
+                    'success' => true,
+                    'inscripcion_id' => $inscripcionId,
+                    'message' => 'Equipo inscrito exitosamente (GRATUITO)'
+                ];
+            } else {
+                $error = $stmt->error;
+                $stmt->close();
+                throw new Exception('Error SQL: ' . $error);
+            }
+            
+        } catch (Exception $e) {
+            error_log("Error inscribiendo equipo gratis: " . $e->getMessage());
+            return ['success' => false, 'message' => 'Error: ' . $e->getMessage()];
+        }
+    }
 }
 ?>

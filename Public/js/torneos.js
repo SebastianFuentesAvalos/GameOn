@@ -908,21 +908,20 @@ class TorneosManager {
         try {
             this.mostrarLoadingInscripcion('Inscribiendo equipo...');
             
-            const response = await fetch(`${this.baseUrl}?action=inscribir_equipo_culqi`, {
+            // ✅ USAR LA NUEVA ACCIÓN ESPECÍFICA PARA GRATUITOS
+            const response = await fetch(`${this.baseUrl}?action=inscribir_equipo_gratis`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
                     torneo_id: torneoId,
-                    equipo_id: equipoId,
-                    culqi_token_id: 'GRATIS',
-                    monto: 0
+                    equipo_id: equipoId
                 })
             });
             
             const data = await response.json();
             
             if (data.success) {
-                this.mostrarExitoInscripcion('¡Equipo inscrito exitosamente!');
+                this.mostrarExitoInscripcion('¡Equipo inscrito exitosamente! (GRATUITO)');
                 this.actualizarListaTorneos(); // Refrescar lista
             } else {
                 this.mostrarError('Error: ' + data.message);
