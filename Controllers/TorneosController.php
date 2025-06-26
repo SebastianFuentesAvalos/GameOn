@@ -445,13 +445,19 @@ class TorneosController {
         if (!$this->verificarAutenticacion()) return;
         
         $torneoId = $_GET['torneo_id'] ?? null;
-        $usuarioId = $_SESSION['user_id'] ?? null; // ✅ CAMBIAR 'usuario' por 'user_id'
+        $usuarioId = $_SESSION['user_id'] ?? null;
         
         if (!$torneoId || !$usuarioId) {
             $this->response(['success' => false, 'message' => 'Datos insuficientes']);
         }
         
         try {
+            // ✅ VERIFICAR PRIMERO SI EL USUARIO YA ESTÁ INSCRITO
+            if ($this->torneosModel->verificarUsuarioInscrito($torneoId, $usuarioId)) {
+                $this->response(['success' => false, 'message' => 'Ya estás inscrito en este torneo con algún equipo']);
+                return;
+            }
+            
             // ✅ OBTENER EQUIPOS DEL USUARIO
             $equipos = $this->torneosModel->obtenerEquiposUsuario($usuarioId);
             

@@ -72,9 +72,16 @@ class UsuarioModel {
         } else if ($user_type === 'instalacion') {
             // Para instalaciones, el email se almacena en la columna 'username'
             $stmt = $this->conn->prepare("
+<<<<<<< HEAD
                 SELECT id, username, username as email 
                 FROM usuarios_instalaciones 
                 WHERE username = ? AND estado = 1 AND tipo_usuario = 'privado'
+=======
+                SELECT ui.id, ui.username, id.email 
+                FROM usuarios_instalaciones ui 
+                JOIN instituciones_deportivas id ON ui.id = id.usuario_id 
+                WHERE id.email = ? AND ui.estado = 1 AND ui.tipo_usuario = 'privado'
+>>>>>>> 3e6029d (.4)
             ");
         } else {
             return false;

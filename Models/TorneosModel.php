@@ -501,15 +501,15 @@ class TorneosModel {
         try {
             // ✅ BUSCAR EQUIPOS DONDE EL USUARIO ES MIEMBRO Y ESTÁN INSCRITOS
             $query = "SELECT DISTINCT e.id, e.nombre as equipo_nombre, te.fecha_inscripcion, 
-                         te.estado_inscripcion, te.metodo_pago, te.monto_pagado,
-                         em.rol as rol_usuario
-                  FROM torneos_equipos te
-                  INNER JOIN equipos e ON te.equipo_id = e.id
-                  INNER JOIN equipo_miembros em ON e.id = em.equipo_id
-                  WHERE te.torneo_id = ? 
-                  AND em.usuario_id = ? 
-                  AND te.estado_inscripcion = 'confirmada'
-                  ORDER BY te.fecha_inscripcion ASC";
+                        te.estado_inscripcion, te.metodo_pago, te.monto_pagado,
+                        em.rol as rol_usuario
+                FROM torneos_equipos te
+                INNER JOIN equipos e ON te.equipo_id = e.id
+                INNER JOIN equipo_miembros em ON e.id = em.equipo_id
+                WHERE te.torneo_id = ? 
+                AND em.usuario_id = ? 
+                AND te.estado_inscripcion = 'confirmada'
+                ORDER BY te.fecha_inscripcion ASC";
         
             $stmt = $this->conn->prepare($query);
             $stmt->bind_param("ii", $torneoId, $usuarioId);
@@ -556,57 +556,54 @@ class TorneosModel {
                 (t.equipos_inscritos >= t.max_equipos) as aforo_lleno,
                 -- ✅ AGREGAR CUPOS DISPONIBLES
                 (t.max_equipos - t.equipos_inscritos) as cupos_disponibles";
-    
-        // ✅ CORREGIR: Verificar inscripción por membresía en equipos
+
+        // ✅ CORREGIR: Verificar inscripción por membresía en equipos (LÍDER O MIEMBRO)
         if ($usuarioId) {
             $sql .= ", (SELECT COUNT(*) 
-                     FROM torneos_equipos te 
-                     INNER JOIN equipos e ON te.equipo_id = e.id 
-                     INNER JOIN equipo_miembros em ON e.id = em.equipo_id
-                     WHERE te.torneo_id = t.id 
-                     AND em.usuario_id = ? 
-                     AND te.estado_inscripcion = 'confirmada') as usuario_inscrito";
+                    FROM torneos_equipos te 
+                    INNER JOIN equipos e ON te.equipo_id = e.id 
+                    INNER JOIN equipo_miembros em ON e.id = em.equipo_id
+                    WHERE te.torneo_id = t.id 
+                    AND em.usuario_id = ? 
+                    AND te.estado_inscripcion = 'confirmada') as usuario_inscrito";
         } else {
             $sql .= ", 0 as usuario_inscrito";
         }
-    
+
         $sql .= " FROM torneos t
                 INNER JOIN deportes d ON t.deporte_id = d.id
                 INNER JOIN instituciones_deportivas id ON t.institucion_sede_id = id.id
                 INNER JOIN usuarios_instalaciones ui ON id.usuario_instalacion_id = ui.id
                 WHERE 1=1";
-    
+
         $params = [];
         $types = "";
-    
+
         // ✅ AGREGAR USUARIO_ID COMO PRIMER PARÁMETRO SI EXISTE
         if ($usuarioId) {
             $params[] = $usuarioId;
             $types .= "i";
         }
-    
-        // Filtro por deporte
+
+        // ✅ RESTO DE FILTROS IGUAL...
         if (!empty($filtros['deporte_id'])) {
             $sql .= " AND t.deporte_id = ?";
             $params[] = $filtros['deporte_id'];
             $types .= "i";
         }
-    
-        // Filtro por estado
+
         if (!empty($filtros['estado'])) {
             $sql .= " AND t.estado = ?";
             $params[] = $filtros['estado'];
             $types .= "s";
         }
-    
-        // ✅ NUEVO: Filtro por usuario instalación (para instituciones deportivas)
+
         if (!empty($filtros['usuario_instalacion_id'])) {
             $sql .= " AND id.usuario_instalacion_id = ?";
             $params[] = $filtros['usuario_instalacion_id'];
             $types .= "i";
         }
-    
-        // Filtro por tipo de organizador (IPD/Privado)
+
         if (!empty($filtros['organizador_tipo'])) {
             if ($filtros['organizador_tipo'] === 'ipd') {
                 $sql .= " AND ui.tipo_usuario = 'ipd'";
@@ -614,21 +611,19 @@ class TorneosModel {
                 $sql .= " AND ui.tipo_usuario = 'privado'";
             }
         }
-    
-        // Filtro por calificación mínima
+
         if (!empty($filtros['calificacion_min']) && $filtros['calificacion_min'] > 0) {
             $sql .= " AND id.calificacion >= ?";
             $params[] = $filtros['calificacion_min'];
             $types .= "d";
         }
-    
-        // Filtro por nombre
+
         if (!empty($filtros['nombre'])) {
             $sql .= " AND t.nombre LIKE ?";
             $params[] = '%' . $filtros['nombre'] . '%';
             $types .= "s";
         }
-    
+
         $sql .= " ORDER BY 
                     CASE t.estado
                         WHEN 'inscripciones_abiertas' THEN 1
@@ -639,7 +634,7 @@ class TorneosModel {
                         WHEN 'cancelado' THEN 6
                     END,
                     t.fecha_inicio ASC";
-    
+
         $stmt = $this->conn->prepare($sql);
         if (!empty($params)) {
             $stmt->bind_param($types, ...$params);
