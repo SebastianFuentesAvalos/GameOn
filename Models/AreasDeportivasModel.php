@@ -15,32 +15,79 @@ class AreasDeportivasModel {
 
     // Obtener todas las áreas deportivas de una institución específica
     public function getAreasByInstitucion($institucionId) {
-        $query = "SELECT ad.*, d.nombre as deporte_nombre, id.nombre as institucion_nombre
+        $query = "SELECT DISTINCT
+                      ad.id,
+                      ad.institucion_deportiva_id,
+                      ad.deporte_id,
+                      ad.nombre_area,
+                      ad.descripcion,
+                      ad.capacidad_jugadores,
+                      ad.tarifa_por_hora,
+                      ad.estado,
+                      ad.imagen_area,
+                      ad.creado_en,
+                      d.nombre as deporte_nombre,
+                      inst.nombre as institucion_nombre
                   FROM areas_deportivas ad
-                  INNER JOIN deportes d ON ad.deporte_id = d.id
-                  INNER JOIN instituciones_deportivas id ON ad.institucion_deportiva_id = id.id
+                  LEFT JOIN deportes d ON ad.deporte_id = d.id
+                  LEFT JOIN instituciones_deportivas inst ON ad.institucion_deportiva_id = inst.id
                   WHERE ad.institucion_deportiva_id = ?
-                  ORDER BY ad.creado_en DESC";
+                  ORDER BY ad.id ASC";
+    
         $stmt = $this->conn->prepare($query);
+        if (!$stmt) {
+            error_log("Error en consulta getAreasByInstitucion: " . $this->conn->error);
+            return [];
+        }
+    
         $stmt->bind_param("i", $institucionId);
         $stmt->execute();
         $result = $stmt->get_result();
+    
         return $this->fetchAllAssoc($result);
     }
 
     // Obtener todas las áreas deportivas de un usuario instalación
     public function getAreasByUsuarioInstalacion($usuarioInstalacionId) {
-        $query = "SELECT ad.*, d.nombre as deporte_nombre, id.nombre as institucion_nombre
+        // ✅ CONSULTA ÚNICA CON LEFT JOIN - SIN FOREACH ANIDADO
+        $query = "SELECT DISTINCT
+                      ad.id,
+                      ad.institucion_deportiva_id,
+                      ad.deporte_id,
+                      ad.nombre_area,
+                      ad.descripcion,
+                      ad.capacidad_jugadores,
+                      ad.tarifa_por_hora,
+                      ad.estado,
+                      ad.imagen_area,
+                      ad.creado_en,
+                      d.nombre as deporte_nombre,
+                      inst.nombre as institucion_nombre
                   FROM areas_deportivas ad
-                  INNER JOIN deportes d ON ad.deporte_id = d.id
-                  INNER JOIN instituciones_deportivas id ON ad.institucion_deportiva_id = id.id
-                  WHERE id.usuario_instalacion_id = ?
-                  ORDER BY id.nombre, ad.nombre_area";
+                  LEFT JOIN deportes d ON ad.deporte_id = d.id
+                  LEFT JOIN instituciones_deportivas inst ON ad.institucion_deportiva_id = inst.id
+                  WHERE inst.usuario_instalacion_id = ?
+                  ORDER BY ad.id ASC";
+    
         $stmt = $this->conn->prepare($query);
+        if (!$stmt) {
+            error_log("Error en consulta getAreasByUsuarioInstalacion: " . $this->conn->error);
+            return [];
+        }
+    
         $stmt->bind_param("i", $usuarioInstalacionId);
         $stmt->execute();
         $result = $stmt->get_result();
-        return $this->fetchAllAssoc($result);
+    
+        $areas = $this->fetchAllAssoc($result);
+    
+        // ✅ LOG FINAL
+        error_log("🔍 Usuario: $usuarioInstalacionId - Áreas encontradas: " . count($areas));
+        foreach ($areas as $index => $area) {
+            error_log("🔍 Área $index: ID={$area['id']}, Nombre={$area['nombre_area']}");
+        }
+    
+        return $areas;
     }
 
     // Obtener área por ID
@@ -59,11 +106,20 @@ class AreasDeportivasModel {
 
     // Crear nueva área deportiva
     public function crearArea($institucionId, $deporteId, $nombreArea, $descripcion, $capacidad, $tarifa, $imagen = null, $estado = 'activa') {
+        // ✅ AGREGAR LOG PARA DEBUG (temporal)
+        error_log("🔍 Creando área: $nombreArea para institución: $institucionId");
+        
         $query = "INSERT INTO areas_deportivas (institucion_deportiva_id, deporte_id, nombre_area, descripcion, capacidad_jugadores, tarifa_por_hora, imagen_area, estado) 
                   VALUES (?, ?, ?, ?, ?, ?, ?, ?)";
         $stmt = $this->conn->prepare($query);
         $stmt->bind_param("iissidss", $institucionId, $deporteId, $nombreArea, $descripcion, $capacidad, $tarifa, $imagen, $estado);
-        return $stmt->execute();
+        
+        $resultado = $stmt->execute();
+        
+        // ✅ LOG DEL RESULTADO
+        error_log("✅ Área creada: " . ($resultado ? 'SÍ' : 'NO'));
+        
+        return $resultado;
     }
 
     // Actualizar área deportiva

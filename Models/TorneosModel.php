@@ -54,18 +54,19 @@ class TorneosModel {
         }
     }
 
-    // ✅ FUNCIÓN ACTUALIZADA: Actualizar torneo
+    // ✅ FUNCIÓN ACTUALIZADA: Actualizar torneo con estado
     public function actualizarTorneo($torneoId, $datos) {
+        // ✅ AGREGAR ESTADO A LA CONSULTA
         $sql = "UPDATE torneos SET 
                     nombre = ?, descripcion = ?, deporte_id = ?, 
                     max_equipos = ?, fecha_inicio = ?, 
                     fecha_fin = ?, fecha_inscripcion_inicio = ?, fecha_inscripcion_fin = ?,
                     modalidad = ?, premio_1 = ?, premio_2 = ?, premio_3 = ?, 
-                    costo_inscripcion = ?, imagen_torneo = ?
+                    costo_inscripcion = ?, imagen_torneo = ?, estado = ?
                 WHERE id = ? AND organizador_id = ?";
         
         $stmt = $this->conn->prepare($sql);
-        $stmt->bind_param("ssiissssssssdi", 
+        $stmt->bind_param("ssiiasssssssdsi", 
             $datos['nombre'],
             $datos['descripcion'],
             $datos['deporte_id'],
@@ -80,6 +81,7 @@ class TorneosModel {
             $datos['premio_3'],
             $datos['costo_inscripcion'],
             $datos['imagen_torneo'],
+            $datos['estado'], // ✅ NUEVO CAMPO
             $torneoId,
             $datos['organizador_id']
         );

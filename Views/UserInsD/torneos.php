@@ -1,13 +1,10 @@
 <?php
 session_start();
 
-// Verificar si el usuario está autenticado como institución deportiva
 if (!isset($_SESSION['user_id']) || !isset($_SESSION['user_type']) || $_SESSION['user_type'] !== 'instalacion') {
     header("Location: ../Auth/login.php");
     exit();
 }
-
-// Usar controladores
 require_once '../../Controllers/InsDeporController.php';
 
 $insDeporController = new InsDeporController();

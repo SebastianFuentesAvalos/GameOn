@@ -473,6 +473,28 @@ function editarTorneo(torneoId) {
     const torneo = torneosData.find(t => t.id === torneoId);
     if (!torneo) return;
     
+    // ✅ DEFINIR ESTADOS Y SU PROGRESIÓN
+    const estadosProgresion = [
+        'proximo',
+        'inscripciones_abiertas', 
+        'inscripciones_cerradas',
+        'activo',
+        'finalizado',
+        'cancelado'
+    ];
+    
+    // ✅ ENCONTRAR ÍNDICE DEL ESTADO ACTUAL
+    const estadoActualIndex = estadosProgresion.indexOf(torneo.estado);
+    
+    // ✅ GENERAR OPCIONES DE ESTADO (solo hacia adelante)
+    let opcionesEstado = '';
+    for (let i = estadoActualIndex; i < estadosProgresion.length; i++) {
+        const estado = estadosProgresion[i];
+        const estadoTexto = formatearEstado(estado);
+        const selected = estado === torneo.estado ? 'selected' : '';
+        opcionesEstado += `<option value="${estado}" ${selected}>${estadoTexto}</option>`;
+    }
+    
     // Crear modal de edición
     const modalContent = `
         <div class="modal-overlay" id="modalEditarTorneo" style="display: flex;">
@@ -488,6 +510,20 @@ function editarTorneo(torneoId) {
                         <input type="hidden" id="editTorneoId" value="${torneo.id}">
                         
                         <div class="form-grid">
+                            <!-- ✅ NUEVO: Campo de estado -->
+                            <div class="form-group">
+                                <label for="editEstado">
+                                    <i class="fas fa-flag"></i> Estado del Torneo
+                                </label>
+                                <select id="editEstado" required>
+                                    ${opcionesEstado}
+                                </select>
+                                <small class="estado-help">
+                                    <i class="fas fa-info-circle"></i> 
+                                    Solo puedes avanzar el estado, no retroceder
+                                </small>
+                            </div>
+                            
                             <div class="form-group">
                                 <label for="editNombre">Nombre del Torneo</label>
                                 <input type="text" id="editNombre" value="${torneo.nombre}" required>
@@ -583,15 +619,46 @@ function editarTorneo(torneoId) {
     
     // Insertar modal en el DOM
     document.body.insertAdjacentHTML('beforeend', modalContent);
+    
+    // ✅ AGREGAR EVENT LISTENER PARA CAMBIO DE ESTADO
+    document.getElementById('editEstado').addEventListener('change', function() {
+        const nuevoEstado = this.value;
+        const estadoAnterior = torneo.estado;
+        
+        if (nuevoEstado !== estadoAnterior) {
+            mostrarConfirmacionCambioEstado(estadoAnterior, nuevoEstado);
+        }
+    });
 }
 
-// ✅ FUNCIÓN NUEVA: Guardar edición del torneo
+// ✅ NUEVA FUNCIÓN: Mostrar confirmación de cambio de estado
+function mostrarConfirmacionCambioEstado(estadoAnterior, nuevoEstado) {
+    const mensajes = {
+        'inscripciones_abiertas': '🟢 Se abrirán las inscripciones para los equipos',
+        'inscripciones_cerradas': '🔒 Se cerrarán las inscripciones (no podrán inscribirse más equipos)',
+        'activo': '▶️ El torneo comenzará y estará en curso',
+        'finalizado': '🏆 El torneo se marcará como terminado',
+        'cancelado': '❌ El torneo se cancelará (acción irreversible)'
+    };
+    
+    const mensaje = mensajes[nuevoEstado] || 'Se cambiará el estado del torneo';
+    
+    if (confirm(`¿Estás seguro de cambiar el estado?\n\n${formatearEstado(estadoAnterior)} → ${formatearEstado(nuevoEstado)}\n\n${mensaje}`)) {
+        showNotification(`Estado cambiado: ${formatearEstado(nuevoEstado)}`, 'info');
+    } else {
+        // Revertir selección si cancela
+        document.getElementById('editEstado').value = estadoAnterior;
+    }
+}
+
+// ✅ FUNCIÓN ACTUALIZADA: Guardar edición del torneo con estado
 async function guardarEdicionTorneo() {
     try {
         const torneoId = document.getElementById('editTorneoId').value;
         
         const datosActualizados = {
             torneo_id: parseInt(torneoId),
+            estado: document.getElementById('editEstado').value, // ✅ NUEVO: Estado
             nombre: document.getElementById('editNombre').value,
             descripcion: document.getElementById('editDescripcion').value,
             deporte_id: parseInt(document.getElementById('editDeporte').value),

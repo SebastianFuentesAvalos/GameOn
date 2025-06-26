@@ -27,13 +27,18 @@ function inicializarEventos() {
 
 // Mostrar formulario nueva área
 function mostrarFormularioNueva() {
+    // ✅ ASEGURAR QUE ESTÉ LIMPIO AL ABRIR
+    resetearFormularioCompleto('formNuevaArea');
+    
     document.getElementById('formularioNuevaArea').classList.add('active');
 }
 
 // Cancelar formulario nueva área
 function cancelarFormularioNueva() {
+    // ✅ RESETEAR COMPLETAMENTE ANTES DE CERRAR
+    resetearFormularioCompleto('formNuevaArea');
+    
     document.getElementById('formularioNuevaArea').classList.remove('active');
-    resetForm('formNuevaArea');
 }
 
 // Cancelar formulario editar área
@@ -139,8 +144,9 @@ async function handleImageUpload(file, previewId, progressId) {
         const result = await response.json();
         
         if (result.success) {
-            // Imagen subida exitosamente
+            // ✅ ACTUALIZAR VARIABLE GLOBAL CORRECTAMENTE
             currentImageUrl = result.data.url;
+            console.log('✅ Nueva imagen URL:', currentImageUrl);
             
             // Completar progreso
             progressFill.style.width = '100%';
@@ -170,20 +176,33 @@ async function handleImageUpload(file, previewId, progressId) {
         console.error('Error:', error);
         alert('Error al subir la imagen: ' + error.message);
         progress.style.display = 'none';
+        
+        // ✅ LIMPIAR currentImageUrl EN CASO DE ERROR
+        currentImageUrl = null;
     }
 }
 
 // Crear nueva área
+// ✅ FUNCIÓN CORREGIDA: Crear nueva área
 async function crearNuevaArea(e) {
     e.preventDefault();
     
-    const formData = new FormData(e.target);
-    if (currentImageUrl) {
-        formData.append('imagen_url', currentImageUrl);
-    }
-    formData.append('action', 'create');
+    // ✅ EVITAR ENVÍO DUPLICADO
+    const submitBtn = e.target.querySelector('button[type="submit"]');
+    if (submitBtn.disabled) return;
+    
+    submitBtn.disabled = true;
+    submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Creando...';
     
     try {
+        const formData = new FormData(e.target);
+        
+        // ✅ AGREGAR IMAGEN SOLO SI EXISTE
+        if (currentImageUrl) {
+            formData.append('imagen_url', currentImageUrl);
+        }
+        formData.append('action', 'create');
+        
         const response = await fetch('../../Models/AreasDeportivasModel.php', {
             method: 'POST',
             body: formData
@@ -193,14 +212,68 @@ async function crearNuevaArea(e) {
         
         if (result.includes('success')) {
             alert('Área deportiva creada exitosamente');
-            location.reload();
+            
+            // ✅ LIMPIAR COMPLETAMENTE EL FORMULARIO
+            resetearFormularioCompleto('formNuevaArea');
+            
+            // ✅ CERRAR FORMULARIO
+            document.getElementById('formularioNuevaArea').classList.remove('active');
+            
+            // ✅ RECARGAR PÁGINA
+            setTimeout(() => {
+                location.reload();
+            }, 500);
+            
         } else {
             alert('Error al crear área deportiva: ' + result);
         }
+        
     } catch (error) {
         console.error('Error:', error);
-        alert('Error al crear área deportiva');
+        alert('Error al crear área deportiva: ' + error.message);
+    } finally {
+        // ✅ REHABILITAR BOTÓN
+        submitBtn.disabled = false;
+        submitBtn.innerHTML = '<i class="fas fa-save"></i> Crear Área';
     }
+}
+
+// ✅ NUEVA FUNCIÓN: Resetear formulario completamente
+function resetearFormularioCompleto(formId) {
+    const form = document.getElementById(formId);
+    if (!form) return;
+    
+    // ✅ RESETEAR TODOS LOS CAMPOS
+    form.reset();
+    
+    // ✅ LIMPIAR VARIABLE GLOBAL DE IMAGEN
+    currentImageUrl = null;
+    
+    // ✅ RESETEAR PREVIEW DE IMAGEN
+    const preview = form.querySelector('.image-preview');
+    if (preview) {
+        preview.innerHTML = `
+            <div class="upload-placeholder">
+                <i class="fas fa-cloud-upload-alt"></i>
+                <p>Arrastra una imagen aquí o haz clic para seleccionar</p>
+                <small>Máximo 5MB - JPG, PNG, GIF</small>
+            </div>
+        `;
+    }
+    
+    // ✅ OCULTAR BARRA DE PROGRESO
+    const progress = form.querySelector('.upload-progress');
+    if (progress) {
+        progress.style.display = 'none';
+    }
+    
+    // ✅ RESETEAR SELECTORES A PRIMERA OPCIÓN
+    const selects = form.querySelectorAll('select');
+    selects.forEach(select => {
+        select.selectedIndex = 0;
+    });
+    
+    console.log('✅ Formulario completamente reseteado');
 }
 
 // ✅ FUNCIÓN CORREGIDA: Editar área con datos reales
@@ -460,21 +533,5 @@ document.addEventListener('DOMContentLoaded', function() {
 
 // Resetear formulario
 function resetForm(formId) {
-    const form = document.getElementById(formId);
-    if (form) {
-        form.reset();
-    }
-    currentImageUrl = null;
-    
-    // Resetear previews de imagen
-    const previews = document.querySelectorAll('.image-preview');
-    previews.forEach(preview => {
-        preview.innerHTML = `
-            <div class="upload-placeholder">
-                <i class="fas fa-cloud-upload-alt"></i>
-                <p>Arrastra una imagen aquí o haz clic para seleccionar</p>
-                <small>Máximo 5MB - JPG, PNG, GIF</small>
-            </div>
-        `;
-    });
+    resetearFormularioCompleto(formId);
 }

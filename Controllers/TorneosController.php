@@ -276,6 +276,7 @@ class TorneosController {
         return $url;
     }
 
+    // ✅ FUNCIÓN ACTUALIZADA: actualizarTorneo en el controlador
     public function actualizarTorneo() {
         if (!$this->verificarAutenticacion()) return;
         
@@ -300,6 +301,7 @@ class TorneosController {
         }
         
         $datos = [
+            'estado' => $input['estado'] ?? 'proximo', // ✅ NUEVO CAMPO
             'nombre' => trim($input['nombre'] ?? ''),
             'descripcion' => trim($input['descripcion'] ?? ''),
             'deporte_id' => $input['deporte_id'] ?? 0,

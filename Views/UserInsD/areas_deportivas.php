@@ -21,7 +21,7 @@ $misInstalaciones = $insDeporController->getInstalacionesPorUsuario($usuarioInst
 $datosCalificacion = $insDeporController->getCalificacionPromedioPorUsuario($usuarioInstalacionId);
 $deportesDisponibles = $areasController->getDeportes();
 
-// Obtener todas las áreas deportivas del usuario
+// ✅ OBTENER ÁREAS SIN PROCESAMIENTO ADICIONAL
 $todasLasAreas = $areasController->getAreasByUsuarioInstalacion($usuarioInstalacionId);
 
 // ✅ FILTROS MEJORADOS
@@ -51,23 +51,6 @@ if ($nombreBusqueda) {
     $areasDeportivas = array_filter($areasDeportivas, function($area) use ($nombreBusqueda) {
         return stripos($area['nombre_area'], $nombreBusqueda) !== false;
     });
-}
-
-// Agregar horarios a cada área
-foreach ($areasDeportivas as &$area) {
-    $area['horarios'] = $areasController->getHorariosAreaFormateados($area['id']);
-    // Si no tiene horarios, usar horarios por defecto
-    if (empty($area['horarios'])) {
-        $area['horarios'] = [
-            'Lunes' => '07:00 - 21:00',
-            'Martes' => '07:00 - 21:00',
-            'Miércoles' => '07:00 - 21:00',
-            'Jueves' => '07:00 - 21:00',
-            'Viernes' => '07:00 - 22:00',
-            'Sábado' => '08:00 - 22:00',
-            'Domingo' => '09:00 - 20:00'
-        ];
-    }
 }
 
 // Estadísticas para el filtro
@@ -327,73 +310,123 @@ include_once 'header.php';
             </form>
         </div>
 
-        <!-- Grid de áreas deportivas -->
+        <!-- ✅ CAMBIAR COMPLETAMENTE EL GRID DE ÁREAS DEPORTIVAS -->
         <div class="areas-grid">
             <?php if (!empty($areasDeportivas)): ?>
-                <?php foreach ($areasDeportivas as $area): ?>
-                <div class="area-card">
-                    <div class="area-image">
-                        <?php if (!empty($area['imagen_area'])): ?>
-                            <img src="<?= $area['imagen_area'] ?>" alt="<?= htmlspecialchars($area['nombre_area']) ?>">
-                        <?php else: ?>
-                            <div style="display: flex; align-items: center; justify-content: center; height: 100%; background: linear-gradient(135deg, #e9ecef, #f8f9fa); color: #6c757d;">
-                                <i class="fas fa-image" style="font-size: 3rem;"></i>
-                            </div>
-                        <?php endif; ?>
-                        <div class="area-deporte"><?= ucfirst($area['deporte_nombre']) ?></div>
-                        <div class="area-status <?= $area['estado'] ?>"><?= ucfirst($area['estado']) ?></div>
-                    </div>
-                    <div class="area-content">
-                        <h3><?= htmlspecialchars($area['nombre_area']) ?></h3>
-                        <p class="area-description">
-                            <i class="fas fa-building"></i> <?= htmlspecialchars($area['institucion_nombre']) ?>
-                        </p>
-                        <p class="area-description"><?= htmlspecialchars($area['descripcion'] ?? 'Sin descripción') ?></p>
-                        
-                        <div class="area-details">
-                            <div class="detail-item">
-                                <i class="fas fa-users"></i>
-                                <span>Capacidad: <span class="value"><?= $area['capacidad_jugadores'] ?? 'N/A' ?> jugadores</span></span>
-                            </div>
-                            <div class="detail-item">
-                                <i class="fas fa-clock"></i>
-                                <span>Estado: <span class="value"><?= ucfirst($area['estado']) ?></span></span>
-                            </div>
-                        </div>
-
-                        <div class="area-tarifa">
-                            <div class="tarifa-amount">S/. <?= number_format($area['tarifa_por_hora'], 2) ?></div>
-                            <div class="tarifa-label">por hora</div>
-                        </div>
-
-                        <?php if (!empty($area['horarios'])): ?>
-                        <div class="horarios-area">
-                            <h4><i class="fas fa-calendar-alt"></i> Horarios de Atención</h4>
-                            <div class="horarios-grid">
-                                <?php foreach ($area['horarios'] as $dia => $horario): ?>
-                                <div class="horario-dia">
-                                    <span class="dia-nombre"><?= $dia ?></span>
-                                    <span class="dia-horario"><?= $horario ?></span>
+                <?php 
+                // ✅ RESETEAR ÍNDICE PARA FORZAR ORDEN CORRECTO
+                $areasOrdenadas = array_values($areasDeportivas);
+                $totalAreasAMostrar = count($areasOrdenadas);
+                ?>
+                
+                <!-- ✅ DEBUG: Mostrar total de áreas a renderizar -->
+                <!-- Total áreas a mostrar: <?= $totalAreasAMostrar ?> -->
+                
+                <?php for ($i = 0; $i < $totalAreasAMostrar; $i++): ?>
+                    <?php 
+                    // ✅ OBTENER ÁREA POR ÍNDICE ESPECÍFICO
+                    $areaActual = $areasOrdenadas[$i];
+                    
+                    // ✅ LIMPIAR Y PREPARAR DATOS DE ESTA ÁREA ESPECÍFICA
+                    $areaId = (int)$areaActual['id'];
+                    $areaNombre = htmlspecialchars($areaActual['nombre_area'] ?? 'Sin nombre');
+                    $areaDescripcion = htmlspecialchars($areaActual['descripcion'] ?? 'Sin descripción');
+                    $areaDeporte = ucfirst($areaActual['deporte_nombre'] ?? 'Sin deporte');
+                    $areaEstado = $areaActual['estado'] ?? 'activa';
+                    $areaCapacidad = $areaActual['capacidad_jugadores'] ?? 'N/A';
+                    $areaTarifa = number_format((float)$areaActual['tarifa_por_hora'], 2);
+                    $areaImagen = $areaActual['imagen_area'] ?? '';
+                    $institucionNombre = htmlspecialchars($areaActual['institucion_nombre'] ?? 'Sin institución');
+                    
+                    // ✅ OBTENER HORARIOS ESPECÍFICOS PARA ESTA ÁREA
+                    $horariosEspecificos = [];
+                    try {
+                        $horariosEspecificos = $areasController->getHorariosAreaFormateados($areaId);
+                        if (empty($horariosEspecificos)) {
+                            $horariosEspecificos = [
+                                'Lunes' => '07:00 - 21:00',
+                                'Martes' => '07:00 - 21:00',
+                                'Miércoles' => '07:00 - 21:00',
+                                'Jueves' => '07:00 - 21:00',
+                                'Viernes' => '07:00 - 22:00',
+                                'Sábado' => '08:00 - 22:00',
+                                'Domingo' => '09:00 - 20:00'
+                            ];
+                        }
+                    } catch (Exception $e) {
+                        $horariosEspecificos = ['Error' => 'No disponible'];
+                    }
+                    ?>
+                    
+                    <!-- ✅ DEBUG: Información de cada área -->
+                    <!-- Área <?= $i + 1 ?>: ID=<?= $areaId ?>, Nombre=<?= $areaNombre ?> -->
+                    
+                    <div class="area-card" data-area-index="<?= $i ?>" data-area-id="<?= $areaId ?>">
+                        <div class="area-image">
+                            <?php if (!empty($areaImagen)): ?>
+                                <img src="<?= $areaImagen ?>" alt="<?= $areaNombre ?>" loading="lazy">
+                            <?php else: ?>
+                                <div style="display: flex; align-items: center; justify-content: center; height: 100%; background: linear-gradient(135deg, #e9ecef, #f8f9fa); color: #6c757d;">
+                                    <i class="fas fa-image" style="font-size: 3rem;"></i>
                                 </div>
-                                <?php endforeach; ?>
+                            <?php endif; ?>
+                            <div class="area-deporte"><?= $areaDeporte ?></div>
+                            <div class="area-status <?= $areaEstado ?>"><?= ucfirst($areaEstado) ?></div>
+                        </div>
+                        
+                        <div class="area-content">
+                            <h3><?= $areaNombre ?></h3>
+                            <p class="area-description">
+                                <i class="fas fa-building"></i> <?= $institucionNombre ?>
+                            </p>
+                            <p class="area-description"><?= $areaDescripcion ?></p>
+                            
+                            <div class="area-details">
+                                <div class="detail-item">
+                                    <i class="fas fa-users"></i>
+                                    <span>Capacidad: <span class="value"><?= $areaCapacidad ?> jugadores</span></span>
+                                </div>
+                                <div class="detail-item">
+                                    <i class="fas fa-clock"></i>
+                                    <span>Estado: <span class="value"><?= ucfirst($areaEstado) ?></span></span>
+                                </div>
+                            </div>
+
+                            <div class="area-tarifa">
+                                <div class="tarifa-amount">S/. <?= $areaTarifa ?></div>
+                                <div class="tarifa-label">por hora</div>
+                            </div>
+
+                            <?php if (!empty($horariosEspecificos)): ?>
+                            <div class="horarios-area">
+                                <h4><i class="fas fa-calendar-alt"></i> Horarios de Atención</h4>
+                                <div class="horarios-grid">
+                                    <?php foreach ($horariosEspecificos as $dia => $horario): ?>
+                                    <div class="horario-dia">
+                                        <span class="dia-nombre"><?= $dia ?></span>
+                                        <span class="dia-horario"><?= $horario ?></span>
+                                    </div>
+                                    <?php endforeach; ?>
+                                </div>
+                            </div>
+                            <?php endif; ?>
+
+                            <div class="area-actions">
+                                <button class="btn-small btn-success" onclick="editarArea(<?= $areaId ?>)">
+                                    <i class="fas fa-edit"></i> Editar
+                                </button>
+                                <button class="btn-small btn-warning" onclick="gestionarHorariosArea(<?= $areaId ?>, '<?= $areaNombre ?>')">
+                                    <i class="fas fa-clock"></i> Horarios
+                                </button>
+                                <button class="btn-small btn-danger" onclick="eliminarArea(<?= $areaId ?>)">
+                                    <i class="fas fa-trash"></i> Eliminar
+                                </button>
                             </div>
                         </div>
-                        <?php endif; ?>
-
-                        <div class="area-actions">
-                            <button class="btn-small btn-success" onclick="editarArea(<?= $area['id'] ?>)">
-                                <i class="fas fa-edit"></i> Editar
-                            </button>
-                            <button class="btn-small btn-warning" onclick="gestionarHorariosArea(<?= $area['id'] ?>, '<?= htmlspecialchars($area['nombre_area']) ?>')">
-                                <i class="fas fa-clock"></i> Horarios
-                            </button>
-                            <button class="btn-small btn-danger" onclick="eliminarArea(<?= $area['id'] ?>)">
-                                <i class="fas fa-trash"></i> Eliminar
-                            </button>
-                        </div>
                     </div>
-                </div>
-                <?php endforeach; ?>
+                    
+                <?php endfor; ?>
+                
             <?php elseif ($instalacionSeleccionada || $deporteSeleccionado || $nombreBusqueda): ?>
                 <div class="no-selection">
                     <i class="fas fa-search"></i>
@@ -476,3 +509,31 @@ include_once 'header.php';
 <script src="../../Public/js/areas_deportivas.js"></script>
 
 <?php include_once 'footer.php'; ?>
+
+<?php
+// ✅ DEBUG TEMPORAL - AGREGAR DESPUÉS DE: $todasLasAreas = $areasController->getAreasByUsuarioInstalacion($usuarioInstalacionId);
+
+echo "<!-- DEBUG PHP: \n";
+echo "Total áreas obtenidas: " . count($todasLasAreas) . "\n";
+foreach ($todasLasAreas as $idx => $area) {
+    echo "Área $idx: ID={$area['id']}, Nombre={$area['nombre_area']}\n";
+}
+echo " -->";
+
+// ✅ VERIFICAR DUPLICADOS EN PHP
+$idsUnicos = [];
+$duplicados = [];
+foreach ($todasLasAreas as $area) {
+    if (in_array($area['id'], $idsUnicos)) {
+        $duplicados[] = $area['id'];
+        echo "<!-- ❌ DUPLICADO DETECTADO EN PHP: ID={$area['id']} -->";
+    } else {
+        $idsUnicos[] = $area['id'];
+    }
+}
+
+if (!empty($duplicados)) {
+    echo "<!-- ❌ DUPLICADOS ENCONTRADOS: " . implode(', ', $duplicados) . " -->";
+} else {
+    echo "<!-- ✅ NO HAY DUPLICADOS EN PHP -->";
+}
