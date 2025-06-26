@@ -353,17 +353,11 @@ include_once 'header.php';
 
 <?php
 
-
-// Incluir GameOnBot
-
-
 require_once __DIR__ . '/../../Helpers/GameOnBot.php'; // Ajusta la ruta si lo pusiste en otro lado
 $secret = 'adg17goyqhl2845es8y6c6n7ezhnjfnx'; // Cambia esto por tu clave secreta de Chatbase
 $userId = $_SESSION['user_id'] ?? uniqid('user_');
 $bot = new GameOnBot($secret, $userId);
 echo $bot->getEmbedScript();
-
-
 
 // Incluir pie de página
 include_once 'footer.php';
