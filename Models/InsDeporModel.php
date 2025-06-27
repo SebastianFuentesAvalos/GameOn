@@ -523,5 +523,72 @@ class InsDeporModel {
             return ['success' => false, 'message' => 'Error: ' . $e->getMessage()];
         }
     }
+
+    // ✅ NUEVA FUNCIÓN: Obtener instalaciones por deportes favoritos
+    public function getInstalacionesPorDeportesFavoritos($deporteIds) {
+        if (empty($deporteIds)) {
+            return [];
+        }
+        
+        // Crear placeholders para la consulta
+        $placeholders = str_repeat('?,', count($deporteIds) - 1) . '?';
+        
+        $query = "SELECT DISTINCT i.*, 
+                     (SELECT COUNT(*) FROM areas_deportivas ad WHERE ad.institucion_deportiva_id = i.id AND ad.estado = 'activa') as total_areas,
+                     (SELECT AVG(ad.tarifa_por_hora) FROM areas_deportivas ad WHERE ad.institucion_deportiva_id = i.id AND ad.estado = 'activa') as tarifa_promedio
+              FROM instituciones_deportivas i 
+              INNER JOIN areas_deportivas ad ON i.id = ad.institucion_deportiva_id 
+              WHERE ad.deporte_id IN ($placeholders) 
+              AND i.estado = 1 
+              AND ad.estado = 'activa'
+              ORDER BY i.nombre";
+
+        $stmt = $this->conn->prepare($query);
+        
+        if (!$stmt) {
+            error_log("Error preparando consulta deportes favoritos: " . $this->conn->error);
+            return [];
+        }
+        
+        // Crear tipos de parámetros (todos enteros)
+        $types = str_repeat('i', count($deporteIds));
+        $stmt->bind_param($types, ...$deporteIds);
+        $stmt->execute();
+        $result = $stmt->get_result();
+        $instalaciones = $this->fetchAllAssoc($result);
+        $stmt->close();
+        
+        // ✅ AGREGAR DEPORTES A CADA INSTALACIÓN
+        foreach ($instalaciones as &$instalacion) {
+            // Obtener deportes específicos de la instalación
+            $deportesQuery = "SELECT DISTINCT d.id, d.nombre 
+                         FROM deportes d 
+                         INNER JOIN areas_deportivas ad ON d.id = ad.deporte_id 
+                         WHERE ad.institucion_deportiva_id = ? 
+                         AND ad.estado = 'activa'
+                         AND d.id IN ($placeholders)
+                         ORDER BY d.nombre";
+        
+            $deportesStmt = $this->conn->prepare($deportesQuery);
+            if ($deportesStmt) {
+                // Combinar instalación_id con deporteIds para bind_param
+                $params = array_merge([$instalacion['id']], $deporteIds);
+                $deportesTypes = 'i' . str_repeat('i', count($deporteIds));
+                
+                $deportesStmt->bind_param($deportesTypes, ...$params);
+                $deportesStmt->execute();
+                $deportesResult = $deportesStmt->get_result();
+                $instalacion['deportes'] = $this->fetchAllAssoc($deportesResult);
+                $deportesStmt->close();
+            } else {
+                $instalacion['deportes'] = [];
+            }
+            
+            // Agregar calificación calculada
+            $instalacion['calificacion'] = $this->getCalificacionPromedioInstalacion($instalacion['id']);
+        }
+        
+        return $instalaciones;
+    }
 }
 ?>

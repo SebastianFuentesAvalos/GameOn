@@ -19,6 +19,12 @@ class InsDeporController {
             case 'actualizar_claves_pago':
                 $this->actualizarClavesPago();
                 break;
+            case 'obtener_todas_instalaciones':
+                $this->obtenerTodasInstalaciones();
+                break;
+            case 'obtener_instalaciones_filtradas':
+                $this->obtenerInstalacionesFiltradas();
+                break;
             default:
                 http_response_code(404);
                 echo json_encode(['success' => false, 'message' => 'Acción no encontrada']);
@@ -73,7 +79,12 @@ class InsDeporController {
     }
     
     // Obtener instalaciones con información completa para mostrar
-    public function getInstalacionesCompletas() {
+    public function getInstalacionesCompletas($usuarioId = null) {
+        if ($usuarioId) {
+            return $this->getInstalacionesFiltradas($usuarioId);
+        }
+        
+        // Comportamiento original para usuarios no autenticados
         $instalaciones = $this->getAllInstalaciones();
         $instalacionesCompletas = [];
         
@@ -191,6 +202,102 @@ class InsDeporController {
         } catch (Exception $e) {
             error_log("Error en actualizarClavesPago controlador: " . $e->getMessage());
             echo json_encode(['success' => false, 'message' => 'Error: ' . $e->getMessage()]);
+        }
+    }
+    
+    // ✅ NUEVA FUNCIÓN: Obtener instalaciones filtradas por deportes del usuario
+    public function getInstalacionesFiltradas($usuarioId) {
+        // Obtener deportes del usuario
+        require_once __DIR__ . '/PerfilController.php';
+        $perfilController = new PerfilController();
+        $deportesUsuario = $perfilController->getDeportesUsuario($usuarioId);
+        
+        error_log("Deportes usuario obtenidos: " . print_r($deportesUsuario, true));
+        
+        if (empty($deportesUsuario)) {
+            // Si no tiene deportes favoritos, mostrar todas las instalaciones
+            error_log("Usuario sin deportes favoritos, mostrando todas");
+            return $this->getInstalacionesCompletas();
+        }
+        
+        // Obtener IDs de deportes favoritos
+        $deporteIds = array_column($deportesUsuario, 'id');
+        error_log("IDs de deportes favoritos: " . print_r($deporteIds, true));
+        
+        // ✅ OBTENER INSTALACIONES DE FORMA CORRECTA
+        $instalaciones = $this->getAllInstalaciones();
+        $instalacionesFiltradas = [];
+        
+        foreach ($instalaciones as $instalacion) {
+            // Obtener deportes de la instalación
+            $deportesInstalacion = $this->getDeportesInstalacion($instalacion['id']);
+            $deportesInstalacionIds = array_column($deportesInstalacion, 'id');
+            
+            // Verificar si hay intersección entre deportes del usuario y de la instalación
+            $deportesComunes = array_intersect($deporteIds, $deportesInstalacionIds);
+            
+            if (!empty($deportesComunes)) {
+                // Filtrar solo los deportes favoritos del usuario
+                $deportesFiltrados = array_filter($deportesInstalacion, function($deporte) use ($deporteIds) {
+                    return in_array($deporte['id'], $deporteIds);
+                });
+                
+                // Agregar información completa
+                $horarios = $this->getHorariosInstalacion($instalacion['id']);
+                $instalacion['horarios'] = $this->formatearHorarios($horarios);
+                $instalacion['deportes'] = array_values($deportesFiltrados); // ✅ ASEGURAR ARRAY INDEXADO
+                $instalacion['calificacion'] = $this->insDeporModel->getCalificacionPromedioInstalacion($instalacion['id']);
+                
+                $instalacionesFiltradas[] = $instalacion;
+            }
+        }
+        
+        error_log("Instalaciones filtradas encontradas: " . count($instalacionesFiltradas));
+        return $instalacionesFiltradas;
+    }
+    
+    // ✅ NUEVA FUNCIÓN: Obtener todas las instalaciones vía AJAX
+    private function obtenerTodasInstalaciones() {
+        header('Content-Type: application/json');
+        
+        try {
+            $instalaciones = $this->getInstalacionesCompletas(); // Sin filtro
+            echo json_encode([
+                'success' => true, 
+                'instalaciones' => $instalaciones
+            ]);
+        } catch (Exception $e) {
+            echo json_encode([
+                'success' => false, 
+                'message' => 'Error: ' . $e->getMessage()
+            ]);
+        }
+    }
+
+    // ✅ NUEVA FUNCIÓN: Obtener instalaciones filtradas vía AJAX
+    private function obtenerInstalacionesFiltradas() {
+        if (session_status() == PHP_SESSION_NONE) {
+            session_start();
+        }
+        
+        header('Content-Type: application/json');
+        
+        try {
+            if (!isset($_SESSION['user_id'])) {
+                echo json_encode(['success' => false, 'message' => 'Usuario no autenticado']);
+                return;
+            }
+            
+            $instalaciones = $this->getInstalacionesCompletas($_SESSION['user_id']); // Con filtro
+            echo json_encode([
+                'success' => true, 
+                'instalaciones' => $instalaciones
+            ]);
+        } catch (Exception $e) {
+            echo json_encode([
+                'success' => false, 
+                'message' => 'Error: ' . $e->getMessage()
+            ]);
         }
     }
 }

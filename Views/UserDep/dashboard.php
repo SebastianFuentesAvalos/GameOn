@@ -14,7 +14,19 @@ require_once '../../Controllers/PerfilController.php';
 
 $insDeporController = new InsDeporController();
 $perfilController = new PerfilController();
-$instalaciones = $insDeporController->getInstalacionesCompletas();
+$instalaciones = $insDeporController->getInstalacionesCompletas($_SESSION['user_id']);
+
+// ✅ AGREGAR DESPUÉS DE OBTENER LAS INSTALACIONES
+$instalaciones = $insDeporController->getInstalacionesCompletas($_SESSION['user_id']);
+
+// ✅ DEBUG: Verificar estructura de datos
+error_log("DEBUG - Total instalaciones obtenidas: " . count($instalaciones));
+if (!empty($instalaciones)) {
+    error_log("DEBUG - Primera instalación: " . print_r($instalaciones[0], true));
+    if (isset($instalaciones[0]['deportes'])) {
+        error_log("DEBUG - Deportes primera instalación: " . print_r($instalaciones[0]['deportes'], true));
+    }
+}
 
 // Obtener datos del perfil y deportes del usuario
 $perfilUsuario = $perfilController->getPerfilDeportista($_SESSION['user_id']);
@@ -89,29 +101,73 @@ include_once 'header.php';
 
     <!-- Instalaciones Deportivas Cercanas -->
     <div class="dashboard-wide-card">
-        <h2><i class="fas fa-map-marker-alt"></i> Instalaciones Deportivas Cercanas</h2>
-        <div class="map-container">
-            <div id="map">
-                <div class="loading">
-                    <div class="spinner-border"></div>
-                    <p>Cargando mapa de instalaciones...</p>
+        <h2>
+            <i class="fas fa-map-marker-alt"></i> 
+            Instalaciones Deportivas 
+            <?php if (!empty($deportesUsuario)): ?>
+                <span class="filtro-info">
+                    (Filtradas por tus deportes favoritos: <?= implode(', ', array_column($deportesUsuario, 'nombre')) ?>)
+                </span>
+            <?php else: ?>
+                <span class="filtro-info">(Mostrando todas las instalaciones)</span>
+            <?php endif; ?>
+        </h2>
+        
+        <?php if (empty($instalaciones)): ?>
+            <div class="sin-instalaciones-mensaje">
+                <i class="fas fa-info-circle" style="font-size: 3rem; color: #ffc107; margin-bottom: 15px;"></i>
+                <h3>No hay instalaciones para tus deportes favoritos</h3>
+                <p>Las instalaciones disponibles no ofrecen los deportes que tienes marcados como favoritos.</p>
+                
+                <?php if (empty($deportesUsuario)): ?>
+                    <p><strong>Sugerencia:</strong> Agrega deportes favoritos para ver instalaciones específicas.</p>
+                    <button class="btn-primary" onclick="abrirModalDeportes()">
+                        <i class="fas fa-plus"></i> Agregar Deportes Favoritos
+                    </button>
+                <?php else: ?>
+                    <p><strong>Sugerencia:</strong> Puedes agregar más deportes o ver todas las instalaciones.</p>
+                    <div style="display: flex; gap: 15px; justify-content: center; margin-top: 15px;">
+                        <button class="btn-primary" onclick="abrirModalDeportes()">
+                            <i class="fas fa-plus"></i> Agregar Más Deportes
+                        </button>
+                        <button class="btn-outline" onclick="mostrarTodasInstalaciones()">
+                            <i class="fas fa-eye"></i> Ver Todas las Instalaciones
+                        </button>
+                    </div>
+                <?php endif; ?>
+            </div>
+        <?php else: ?>
+            <div class="map-container">
+                <div id="map">
+                    <div class="loading">
+                        <div class="spinner-border"></div>
+                        <p>Cargando mapa de instalaciones...</p>
+                    </div>
                 </div>
             </div>
-        </div>
-        <!-- Lista de instalaciones cercanas -->
-        <div class="nearby-facilities">
-            <?php foreach ($instalaciones as $instalacion): ?>
-            <div class="facility-item">
-                <h3><?= $instalacion['nombre'] ?></h3>
-                <p><i class="fas fa-running"></i> <?= implode(', ', array_column($instalacion['deportes'], 'nombre')) ?></p>
-                <p><i class="fas fa-map-marker-alt"></i> <?= $instalacion['direccion'] ?></p>
-                <p><i class="fas fa-star"></i> <?= number_format($instalacion['calificacion'], 1) ?> estrellas</p>
-                <button class="btn-primary btn-sm" onclick="verInstalacionCompleta(<?= $instalacion['id'] ?>)">
-                    <i class="fas fa-eye"></i> Ver más
+            
+            <!-- Lista de instalaciones filtradas -->
+            <div class="nearby-facilities">
+                <?php foreach ($instalaciones as $instalacion): ?>
+                <div class="facility-item">
+                    <h3><?= $instalacion['nombre'] ?></h3>
+                    <p><i class="fas fa-running"></i> <?= implode(', ', array_column($instalacion['deportes'], 'nombre')) ?></p>
+                    <p><i class="fas fa-map-marker-alt"></i> <?= $instalacion['direccion'] ?></p>
+                    <p><i class="fas fa-star"></i> <?= number_format($instalacion['calificacion'], 1) ?> estrellas</p>
+                    <button class="btn-primary btn-sm" onclick="verInstalacionCompleta(<?= $instalacion['id'] ?>)">
+                        <i class="fas fa-eye"></i> Ver más
+                    </button>
+                </div>
+                <?php endforeach; ?>
+            </div>
+            
+            <!-- ✅ BOTÓN PARA VER TODAS LAS INSTALACIONES -->
+            <div class="ver-todas-instalaciones">
+                <button class="btn-outline" onclick="mostrarTodasInstalaciones()">
+                    <i class="fas fa-globe"></i> Ver Todas las Instalaciones Disponibles
                 </button>
             </div>
-            <?php endforeach; ?>
-        </div>
+        <?php endif; ?>
     </div>
 
     <!-- Historia de Reservas -->
@@ -336,10 +392,21 @@ include_once 'header.php';
         const instalacionesData = <?= json_encode($instalaciones) ?>;
         console.log('📍 Instalaciones cargadas:', instalacionesData.length);
         
+        // ✅ VERIFICAR ESTRUCTURA DE DATOS
+        if (instalacionesData.length > 0) {
+            console.log('🔍 Primera instalación (muestra):', instalacionesData[0]);
+            console.log('🏃 Deportes de primera instalación:', instalacionesData[0].deportes);
+        }
+        
         // Crear instancia del manager con configuración para dashboard
         if (typeof InsDeporManager !== 'undefined') {
-            window.insDeporManager = new InsDeporManager(instalacionesData);
-            console.log('✅ InsDeporManager creado');
+            try {
+                window.insDeporManager = new InsDeporManager(instalacionesData);
+                console.log('✅ InsDeporManager creado exitosamente');
+            } catch (error) {
+                console.error('❌ Error creando InsDeporManager:', error);
+                console.log('📊 Datos que causaron el error:', instalacionesData);
+            }
         } else {
             console.error('❌ InsDeporManager no está disponible');
         }
@@ -349,6 +416,113 @@ include_once 'header.php';
             loadGoogleMaps();
         }, 500);
     });
+
+    // ✅ AGREGAR ESTAS FUNCIONES AL FINAL DEL SCRIPT
+    // Función para mostrar todas las instalaciones
+    async function mostrarTodasInstalaciones() {
+        try {
+            // Mostrar loading
+            document.querySelector('.nearby-facilities').innerHTML = `
+                <div class="loading" style="text-align: center; padding: 40px;">
+                    <div class="spinner-border"></div>
+                    <p>Cargando todas las instalaciones...</p>
+                </div>
+            `;
+            
+            // Obtener todas las instalaciones
+            const response = await fetch('../../Controllers/InsDeporController.php?action=obtener_todas_instalaciones');
+            const data = await response.json();
+            
+            if (data.success) {
+                // Actualizar mapa con todas las instalaciones
+                if (window.insDeporManager) {
+                    window.insDeporManager.instalaciones = data.instalaciones;
+                    window.insDeporManager.facilities = window.insDeporManager.procesarInstalaciones();
+                    
+                    // Limpiar marcadores existentes
+                    window.insDeporManager.markers.forEach(marker => marker.setMap(null));
+                    window.insDeporManager.markers = [];
+                    
+                    // Agregar nuevos marcadores
+                    window.insDeporManager.addFacilityMarkers();
+                }
+                
+                // Actualizar lista de instalaciones
+                actualizarListaInstalaciones(data.instalaciones);
+                
+                // Actualizar título
+                document.querySelector('.dashboard-wide-card h2').innerHTML = `
+                    <i class="fas fa-map-marker-alt"></i> 
+                    Todas las Instalaciones Deportivas 
+                    <span class="filtro-info">(${data.instalaciones.length} instalaciones encontradas)</span>
+                `;
+                
+                showNotification('✅ Mostrando todas las instalaciones disponibles', 'success');
+                
+            } else {
+                throw new Error(data.message || 'Error obteniendo instalaciones');
+            }
+            
+        } catch (error) {
+            console.error('Error:', error);
+            showNotification('❌ Error cargando instalaciones: ' + error.message, 'error');
+        }
+    }
+
+    // Función para actualizar la lista de instalaciones en el DOM
+    function actualizarListaInstalaciones(instalaciones) {
+        const container = document.querySelector('.nearby-facilities');
+        
+        if (instalaciones.length === 0) {
+            container.innerHTML = `
+                <div class="sin-instalaciones-mensaje">
+                    <i class="fas fa-info-circle" style="font-size: 3rem; color: #ffc107;"></i>
+                    <h3>No hay instalaciones disponibles</h3>
+                </div>
+            `;
+            return;
+        }
+        
+        container.innerHTML = instalaciones.map(instalacion => `
+            <div class="facility-item">
+                <h3>${instalacion.nombre}</h3>
+                <p><i class="fas fa-running"></i> ${instalacion.deportes ? instalacion.deportes.map(d => d.nombre).join(', ') : 'Sin deportes'}</p>
+                <p><i class="fas fa-map-marker-alt"></i> ${instalacion.direccion}</p>
+                <p><i class="fas fa-star"></i> ${parseFloat(instalacion.calificacion).toFixed(1)} estrellas</p>
+                <button class="btn-primary btn-sm" onclick="verInstalacionCompleta(${instalacion.id})">
+                    <i class="fas fa-eye"></i> Ver más
+                </button>
+            </div>
+        `).join('');
+    }
+
+    // Función para restaurar filtro por deportes favoritos
+    async function restaurarFiltroDeportes() {
+        try {
+            const response = await fetch('../../Controllers/InsDeporController.php?action=obtener_instalaciones_filtradas');
+            const data = await response.json();
+            
+            if (data.success) {
+                // Actualizar con instalaciones filtradas
+                if (window.insDeporManager) {
+                    window.insDeporManager.instalaciones = data.instalaciones;
+                    window.insDeporManager.facilities = window.insDeporManager.procesarInstalaciones();
+                    
+                    // Limpiar y recargar marcadores
+                    window.insDeporManager.markers.forEach(marker => marker.setMap(null));
+                    window.insDeporManager.markers = [];
+                    window.insDeporManager.addFacilityMarkers();
+                }
+                
+                actualizarListaInstalaciones(data.instalaciones);
+                showNotification('✅ Filtro por deportes favoritos restaurado', 'success');
+            }
+            
+        } catch (error) {
+            console.error('Error:', error);
+            showNotification('❌ Error restaurando filtro', 'error');
+        }
+    }
 </script>
 
 <?php

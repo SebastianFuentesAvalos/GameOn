@@ -18,20 +18,35 @@ class InsDeporManager {
         }, 100);
     }
     
+    // ✅ MEJORAR FUNCIÓN procesarInstalaciones con validación
     procesarInstalaciones() {
-        if (!this.instalaciones) return [];
+        if (!this.instalaciones || !Array.isArray(this.instalaciones)) {
+            console.warn('⚠️ No hay instalaciones válidas para procesar');
+            return [];
+        }
         
-        return this.instalaciones.map(instalacion => ({
-            position: { 
-                lat: parseFloat(instalacion.latitud), 
-                lng: parseFloat(instalacion.longitud) 
-            },
-            name: instalacion.nombre,
-            type: instalacion.deportes ? instalacion.deportes.map(d => d.nombre).join(', ') : 'Sin deportes',
-            id: instalacion.id,
-            tarifa: `S/. ${parseFloat(instalacion.tarifa).toFixed(2)}`,
-            calificacion: parseFloat(instalacion.calificacion)
-        }));
+        return this.instalaciones.map(instalacion => {
+            // ✅ VALIDAR QUE DEPORTES SEA UN ARRAY
+            let deportesTexto = 'Sin deportes';
+            
+            if (instalacion.deportes && Array.isArray(instalacion.deportes) && instalacion.deportes.length > 0) {
+                deportesTexto = instalacion.deportes.map(d => d.nombre).join(', ');
+            } else {
+                console.warn(`⚠️ Instalación ${instalacion.nombre} sin deportes válidos:`, instalacion.deportes);
+            }
+            
+            return {
+                position: { 
+                    lat: parseFloat(instalacion.latitud), 
+                    lng: parseFloat(instalacion.longitud) 
+                },
+                name: instalacion.nombre,
+                type: deportesTexto,
+                id: instalacion.id,
+                tarifa: `S/. ${parseFloat(instalacion.tarifa || 0).toFixed(2)}`,
+                calificacion: parseFloat(instalacion.calificacion || 0)
+            };
+        });
     }
     
     configurarEventos() {
