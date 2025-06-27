@@ -280,17 +280,17 @@ function showNotification(message, type = 'success') {
     }, 4000);
 }
 
-// ✅ AGREGAR ESTAS FUNCIONES AL ARCHIVO JS
+// ✅ FUNCIONES YA ESTÁN CORRECTAS EN TU ARCHIVO (líneas 263-395)
+
+// Abrir modal
+function abrirModalClavesPago() {
+    modalClavesPago.style.display = 'block';
+    cargarClavesPagoActuales();
+}
 
 // Cerrar modal
 function cerrarModalClavesPago() {
     modalClavesPago.style.display = 'none';
-}
-
-// Abrir modal de claves de pago
-function abrirModalClavesPago() {
-    modalClavesPago.style.display = 'block';
-    cargarClavesPagoActuales();
 }
 
 // Cargar configuración actual
@@ -313,13 +313,13 @@ async function cargarClavesPagoActuales() {
             document.getElementById('paypal_client_secret').value = config.paypal_client_secret || '';
             document.getElementById('paypal_sandbox').checked = config.paypal_sandbox == 1;
             
-            // Mostrar/ocultar campos según estado
+            // Mostrar/ocultar campos
             togglePaymentFields('culqi', config.culqi_enabled == 1);
             togglePaymentFields('paypal', config.paypal_enabled == 1);
         }
     } catch (error) {
         console.error('Error cargando configuración:', error);
-        mostrarNotificacion('Error cargando configuración', 'error');
+        showNotification('Error cargando configuración', 'error');
     }
 }
 
@@ -357,16 +357,16 @@ async function guardarClavesPago() {
         
         // Validaciones
         if (datos.culqi_enabled && (!datos.culqi_public_key || !datos.culqi_secret_key)) {
-            mostrarNotificacion('Las claves de CULQI son requeridas si está habilitado', 'error');
+            showNotification('Las claves de CULQI son requeridas si está habilitado', 'error');
             return;
         }
         
         if (datos.paypal_enabled && (!datos.paypal_client_id || !datos.paypal_client_secret)) {
-            mostrarNotificacion('Las claves de PayPal son requeridas si está habilitado', 'error');
+            showNotification('Las claves de PayPal son requeridas si está habilitado', 'error');
             return;
         }
         
-        mostrarNotificacion('Guardando configuración...', 'info');
+        showNotification('Guardando configuración...', 'info');
         
         const response = await fetch('../../Controllers/InsDeporController.php?action=actualizar_claves_pago', {
             method: 'POST',
@@ -377,22 +377,21 @@ async function guardarClavesPago() {
         const result = await response.json();
         
         if (result.success) {
-            mostrarNotificacion('✅ Configuración guardada exitosamente', 'success');
+            showNotification('✅ Configuración guardada exitosamente', 'success');
             cerrarModalClavesPago();
         } else {
-            mostrarNotificacion('❌ ' + result.message, 'error');
+            showNotification('❌ ' + result.message, 'error');
         }
         
     } catch (error) {
         console.error('Error:', error);
-        mostrarNotificacion('❌ Error guardando configuración', 'error');
+        showNotification('❌ Error guardando configuración', 'error');
     }
 }
 
 // Función para mostrar notificaciones
 function mostrarNotificacion(mensaje, tipo) {
-    // Implementar notificación toast o usar la existente
-    console.log(`${tipo.toUpperCase()}: ${mensaje}`);
+    showNotification(mensaje, tipo);
 }
 
 // ✅ ESTILOS ADICIONALES

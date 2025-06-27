@@ -448,30 +448,78 @@ class InsDeporModel {
 
     public function actualizarConfiguracionPago($usuarioId, $datos) {
         try {
+            // ✅ AGREGAR LOG PARA DEBUG
+            error_log("Actualizando usuario ID: " . $usuarioId);
+            error_log("Datos recibidos: " . print_r($datos, true));
+            
             $sql = "UPDATE usuarios_instalaciones SET 
-                        culqi_public_key = ?, culqi_secret_key = ?, culqi_enabled = ?,
-                        paypal_client_id = ?, paypal_client_secret = ?, paypal_enabled = ?, paypal_sandbox = ?
-                    WHERE id = ?";
-            
+                    culqi_public_key = ?, culqi_secret_key = ?, culqi_enabled = ?,
+                    paypal_client_id = ?, paypal_client_secret = ?, paypal_enabled = ?, paypal_sandbox = ?
+                WHERE id = ?";
+        
             $stmt = $this->conn->prepare($sql);
-            $stmt->bind_param("ssississi", 
-                $datos['culqi_public_key'],
-                $datos['culqi_secret_key'],
-                $datos['culqi_enabled'],
-                $datos['paypal_client_id'],
-                $datos['paypal_client_secret'],
-                $datos['paypal_enabled'],
-                $datos['paypal_sandbox'],
-                $usuarioId
-            );
-            
-            if ($stmt->execute()) {
-                return ['success' => true, 'message' => 'Configuración actualizada exitosamente'];
-            } else {
-                throw new Exception('Error ejecutando actualización');
+        
+            if (!$stmt) {
+                throw new Exception('Error preparando consulta: ' . $this->conn->error);
             }
+        
+            // ✅ ASEGURAR QUE LOS VALORES NO SEAN NULL
+            $culqi_public = $datos['culqi_public_key'] ?? '';
+            $culqi_secret = $datos['culqi_secret_key'] ?? '';
+            $culqi_enabled = intval($datos['culqi_enabled'] ?? 0);
+            $paypal_client = $datos['paypal_client_id'] ?? '';        // ✅ STRING
+            $paypal_secret = $datos['paypal_client_secret'] ?? '';    // ✅ STRING
+            $paypal_enabled = intval($datos['paypal_enabled'] ?? 0);
+            $paypal_sandbox = intval($datos['paypal_sandbox'] ?? 1);
             
+            // ✅ LOG DE VALORES ANTES DEL BIND
+            error_log("PayPal Client ID: " . $paypal_client);
+            error_log("PayPal Client Secret: " . substr($paypal_secret, 0, 10) . "...");
+        
+            // ✅ CORREGIR TIPOS: "ssisssii" (s=string, i=integer)
+            $stmt->bind_param("ssisssii", 
+                $culqi_public,      // s (string)
+                $culqi_secret,      // s (string)
+                $culqi_enabled,     // i (integer)
+                $paypal_client,     // s (string) ✅ CORRECTO
+                $paypal_secret,     // s (string) ✅ CORRECTO
+                $paypal_enabled,    // i (integer)
+                $paypal_sandbox,    // i (integer)
+                $usuarioId          // i (integer)
+            );
+        
+            // ✅ EJECUTAR Y VERIFICAR
+            $resultado = $stmt->execute();
+        
+            if (!$resultado) {
+                throw new Exception('Error ejecutando UPDATE: ' . $stmt->error);
+            }
+        
+            // ✅ VERIFICAR FILAS AFECTADAS
+            $filasAfectadas = $stmt->affected_rows;
+            error_log("Filas afectadas: " . $filasAfectadas);
+        
+            if ($filasAfectadas === 0) {
+                // Verificar si el usuario existe
+                $checkSql = "SELECT id FROM usuarios_instalaciones WHERE id = ?";
+                $checkStmt = $this->conn->prepare($checkSql);
+                $checkStmt->bind_param("i", $usuarioId);
+                $checkStmt->execute();
+                $checkResult = $checkStmt->get_result();
+            
+                if ($checkResult->num_rows === 0) {
+                    throw new Exception('Usuario no encontrado con ID: ' . $usuarioId);
+                } else {
+                    error_log("Usuario existe pero no se actualizó - posiblemente datos idénticos");
+                }
+            }
+        
+            $stmt->close();
+        
+            return ['success' => true, 'message' => 'Configuración actualizada exitosamente'];
+        
         } catch (Exception $e) {
+            error_log("Error en actualizarConfiguracionPago: " . $e->getMessage());
             return ['success' => false, 'message' => 'Error: ' . $e->getMessage()];
         }
     }

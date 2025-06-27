@@ -769,3 +769,102 @@ input:checked + .slider {
 input:checked + .slider:before {
     transform: translateX(26px);
 }
+
+/* ✅ MODAL CON SCROLL - AGREGAR AL FINAL DEL ARCHIVO */
+
+/* Modal con scroll mejorado */
+.modal {
+    display: none;
+    position: fixed;
+    z-index: 1000;
+    left: 0;
+    top: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0,0,0,0.6);
+    overflow-y: auto; /* ✅ SCROLL VERTICAL */
+    padding: 20px 0; /* ✅ PADDING SUPERIOR E INFERIOR */
+}
+
+.modal-content {
+    background-color: #fefefe;
+    margin: 0 auto; /* ✅ CENTRADO HORIZONTAL */
+    padding: 0;
+    border: none;
+    border-radius: 12px;
+    width: 90%;
+    max-width: 600px;
+    max-height: 90vh; /* ✅ ALTURA MÁXIMA */
+    box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+    position: relative;
+    overflow: hidden; /* ✅ CONTENIDO CONTROLADO */
+}
+
+.modal-header {
+    padding: 20px 30px;
+    border-bottom: 1px solid #e9ecef;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    background: white;
+    position: sticky; /* ✅ HEADER FIJO */
+    top: 0;
+    z-index: 10;
+}
+
+.modal-body {
+    padding: 20px 30px;
+    max-height: 60vh; /* ✅ ALTURA MÁXIMA DEL BODY */
+    overflow-y: auto; /* ✅ SCROLL SOLO EN EL BODY */
+}
+
+.modal-footer {
+    padding: 20px 30px;
+    border-top: 1px solid #e9ecef;
+    display: flex;
+    justify-content: flex-end;
+    gap: 15px;
+    background: white;
+    position: sticky; /* ✅ FOOTER FIJO */
+    bottom: 0;
+    z-index: 10;
+}
+
+/* Scrollbar personalizada */
+.modal-body::-webkit-scrollbar {
+    width: 8px;
+}
+
+.modal-body::-webkit-scrollbar-track {
+    background: #f1f1f1;
+    border-radius: 4px;
+}
+
+.modal-body::-webkit-scrollbar-thumb {
+    background: #c1c1c1;
+    border-radius: 4px;
+}
+
+.modal-body::-webkit-scrollbar-thumb:hover {
+    background: #a8a8a8;
+}
+
+/* Responsive para el modal */
+@media (max-width: 768px) {
+    .modal {
+        padding: 10px 0;
+    }
+    
+    .modal-content {
+        width: 95%;
+        max-height: 95vh;
+    }
+    
+    .modal-header, .modal-body, .modal-footer {
+        padding: 15px 20px;
+    }
+    
+    .modal-body {
+        max-height: 70vh;
+    }
+}

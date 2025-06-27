@@ -296,7 +296,7 @@ include_once 'header.php';
         </div>
         <div class="modal-body">
             <form id="formClavesPago">
-                <!-- Configuración CULQI -->
+                <!-- CULQI -->
                 <div class="payment-section">
                     <div class="payment-header">
                         <h3><i class="fab fa-cc-visa"></i> CULQI (Perú)</h3>
@@ -307,19 +307,19 @@ include_once 'header.php';
                     </div>
                     <div class="payment-fields" id="culqi-fields">
                         <div class="form-group">
-                            <label for="culqi_public_key">Clave Pública (Public Key)</label>
+                            <label for="culqi_public_key">Clave Pública</label>
                             <input type="text" id="culqi_public_key" name="culqi_public_key" 
                                    placeholder="pk_test_..." maxlength="255">
                         </div>
                         <div class="form-group">
-                            <label for="culqi_secret_key">Clave Secreta (Secret Key)</label>
+                            <label for="culqi_secret_key">Clave Secreta</label>
                             <input type="password" id="culqi_secret_key" name="culqi_secret_key" 
                                    placeholder="sk_test_..." maxlength="255">
                         </div>
                     </div>
                 </div>
 
-                <!-- Configuración PAYPAL -->
+                <!-- PayPal -->
                 <div class="payment-section">
                     <div class="payment-header">
                         <h3><i class="fab fa-paypal"></i> PayPal</h3>

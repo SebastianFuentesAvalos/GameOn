@@ -150,7 +150,6 @@ class InsDeporController {
         }
     }
 
-    // Actualizar claves de pago
     public function actualizarClavesPago() {
         if (session_status() == PHP_SESSION_NONE) {
             session_start();
@@ -159,17 +158,38 @@ class InsDeporController {
         header('Content-Type: application/json');
         
         try {
-            if (!isset($_SESSION['user_id']) || $_SESSION['user_type'] !== 'instalacion') {
-                echo json_encode(['success' => false, 'message' => 'Sin permisos']);
+            if (!isset($_SESSION['user_id']) || !isset($_SESSION['user_type'])) {
+                echo json_encode(['success' => false, 'message' => 'Sesión no válida']);
                 return;
             }
             
+            if ($_SESSION['user_type'] !== 'instalacion') {
+                echo json_encode(['success' => false, 'message' => 'Tipo de usuario incorrecto: ' . $_SESSION['user_type']]);
+                return;
+            }
+            
+            // ✅ LOG DE DEBUG
+            error_log("Usuario actualizando claves: ID=" . $_SESSION['user_id'] . ", Tipo=" . $_SESSION['user_type']);
+            
             $input = json_decode(file_get_contents('php://input'), true);
             
+            if (!$input) {
+                echo json_encode(['success' => false, 'message' => 'Datos JSON no válidos']);
+                return;
+            }
+            
+            // ✅ LOG DE DATOS RECIBIDOS
+            error_log("Datos recibidos en controlador: " . print_r($input, true));
+            
             $resultado = $this->insDeporModel->actualizarConfiguracionPago($_SESSION['user_id'], $input);
+            
+            // ✅ LOG DE RESULTADO
+            error_log("Resultado del modelo: " . print_r($resultado, true));
+            
             echo json_encode($resultado);
             
         } catch (Exception $e) {
+            error_log("Error en actualizarClavesPago controlador: " . $e->getMessage());
             echo json_encode(['success' => false, 'message' => 'Error: ' . $e->getMessage()]);
         }
     }
