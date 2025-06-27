@@ -367,10 +367,11 @@ include_once 'header.php';
 // Incluir GameOnBot
 
 
-require_once __DIR__ . '/../../Helpers/GameOnBot.php'; // Ajusta la ruta si lo pusiste en otro lado
-$secret = 'adg17goyqhl2845es8y6c6n7ezhnjfnx'; // Cambia esto por tu clave secreta de Chatbase
-$userId = $_SESSION['user_id'] ?? uniqid('user_');
-$bot = new GameOnBot($secret, $userId);
+require_once __DIR__ . '/../../Helpers/GameOnBotE.php'; // Ajusta la ruta si lo pusiste en otro lado
+$secret = 'wn37wf4xze9u4cdokc1no5xfqwecd75u'; // Tu clave secreta de Chatbase
+$userId = $SESSION['user_id'] ?? uniqid('user');
+$botId  = 'Vk9zMweVEIr6M0u_y9-z5'; // El ID de tu bot de Chatbase (del script embed)
+$bot = new GameOnBot($secret, $userId, $botId);
 echo $bot->getEmbedScript();
 
 

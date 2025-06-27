@@ -508,7 +508,14 @@ include_once 'header.php';
 <!-- Solo incluir el archivo JS - SIN código duplicado -->
 <script src="../../Public/js/areas_deportivas.js"></script>
 
-<?php include_once 'footer.php'; ?>
+<?php 
+require_once __DIR__ . '/../../Helpers/GameOnBotE.php'; // Ajusta la ruta si lo pusiste en otro lado
+$secret = 'wn37wf4xze9u4cdokc1no5xfqwecd75u'; // Tu clave secreta de Chatbase
+$userId = $SESSION['user_id'] ?? uniqid('user');
+$botId  = 'Vk9zMweVEIr6M0u_y9-z5'; // El ID de tu bot de Chatbase (del script embed)
+$bot = new GameOnBot($secret, $userId, $botId);
+echo $bot->getEmbedScript();
+include_once 'footer.php'; ?>
 
 <?php
 // ✅ DEBUG TEMPORAL - AGREGAR DESPUÉS DE: $todasLasAreas = $areasController->getAreasByUsuarioInstalacion($usuarioInstalacionId);
