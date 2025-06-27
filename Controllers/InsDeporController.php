@@ -8,6 +8,24 @@ class InsDeporController {
         $this->insDeporModel = new InsDeporModel();
     }
     
+    // ✅ AGREGAR FUNCIÓN handleRequest
+    public function handleRequest() {
+        $action = $_GET['action'] ?? '';
+        
+        switch ($action) {
+            case 'obtener_claves_pago':
+                $this->obtenerClavesPago();
+                break;
+            case 'actualizar_claves_pago':
+                $this->actualizarClavesPago();
+                break;
+            default:
+                http_response_code(404);
+                echo json_encode(['success' => false, 'message' => 'Acción no encontrada']);
+                break;
+        }
+    }
+    
     // Obtener todas las instalaciones deportivas
     public function getAllInstalaciones() {
         return $this->insDeporModel->getAllInstalaciones();
@@ -109,5 +127,57 @@ class InsDeporController {
         
         return $instalacionesCompletas;
     }
+    
+    // Obtener claves de pago
+    public function obtenerClavesPago() {
+        if (session_status() == PHP_SESSION_NONE) {
+            session_start();
+        }
+        
+        header('Content-Type: application/json');
+        
+        try {
+            if (!isset($_SESSION['user_id']) || $_SESSION['user_type'] !== 'instalacion') {
+                echo json_encode(['success' => false, 'message' => 'Sin permisos']);
+                return;
+            }
+            
+            $configuracion = $this->insDeporModel->obtenerConfiguracionPago($_SESSION['user_id']);
+            echo json_encode(['success' => true, 'configuracion' => $configuracion]);
+            
+        } catch (Exception $e) {
+            echo json_encode(['success' => false, 'message' => 'Error: ' . $e->getMessage()]);
+        }
+    }
+
+    // Actualizar claves de pago
+    public function actualizarClavesPago() {
+        if (session_status() == PHP_SESSION_NONE) {
+            session_start();
+        }
+        
+        header('Content-Type: application/json');
+        
+        try {
+            if (!isset($_SESSION['user_id']) || $_SESSION['user_type'] !== 'instalacion') {
+                echo json_encode(['success' => false, 'message' => 'Sin permisos']);
+                return;
+            }
+            
+            $input = json_decode(file_get_contents('php://input'), true);
+            
+            $resultado = $this->insDeporModel->actualizarConfiguracionPago($_SESSION['user_id'], $input);
+            echo json_encode($resultado);
+            
+        } catch (Exception $e) {
+            echo json_encode(['success' => false, 'message' => 'Error: ' . $e->getMessage()]);
+        }
+    }
+}
+
+// ✅ AGREGAR ESTO AL FINAL DEL ARCHIVO
+if (basename($_SERVER['PHP_SELF']) == basename(__FILE__)) {
+    $controller = new InsDeporController();
+    $controller->handleRequest();
 }
 ?>

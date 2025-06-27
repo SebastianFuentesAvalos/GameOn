@@ -40,11 +40,14 @@ include_once 'header.php';
             <p>Administra tus instalaciones deportivas de manera eficiente y maximiza tu potencial.</p>
         </div>
         <div class="welcome-actions-inst">
-            <button class="btn-primary-inst btn-nueva-instalacion">
+            <button class="btn-primary-inst btn-nueva-instalacion" onclick="window.location.href='instalaciones_deportivas.php'">
                 <i class="fas fa-plus"></i> Nueva Instalación
             </button>
-            <button class="btn-secondary-inst btn-ver-promociones">
+            <button class="btn-secondary-inst btn-ver-promociones" onclick="window.location.href='torneos.php'">
                 <i class="fas fa-bullhorn"></i> Crear Torneos
+            </button>
+            <button class="btn-primary-inst btn-claves-pago" onclick="abrirModalClavesPago()">
+                <i class="fas fa-key"></i> Claves de Pago
             </button>
         </div>
     </div>
@@ -280,6 +283,79 @@ include_once 'header.php';
                     </div>
                 </div>
             </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal Claves de Pago -->
+<div id="modalClavesPago" class="modal" style="display: none;">
+    <div class="modal-content">
+        <div class="modal-header">
+            <h2><i class="fas fa-key"></i> Configurar Claves de Pago</h2>
+            <span class="close" onclick="cerrarModalClavesPago()">&times;</span>
+        </div>
+        <div class="modal-body">
+            <form id="formClavesPago">
+                <!-- Configuración CULQI -->
+                <div class="payment-section">
+                    <div class="payment-header">
+                        <h3><i class="fab fa-cc-visa"></i> CULQI (Perú)</h3>
+                        <label class="switch">
+                            <input type="checkbox" id="culqi_enabled" name="culqi_enabled">
+                            <span class="slider"></span>
+                        </label>
+                    </div>
+                    <div class="payment-fields" id="culqi-fields">
+                        <div class="form-group">
+                            <label for="culqi_public_key">Clave Pública (Public Key)</label>
+                            <input type="text" id="culqi_public_key" name="culqi_public_key" 
+                                   placeholder="pk_test_..." maxlength="255">
+                        </div>
+                        <div class="form-group">
+                            <label for="culqi_secret_key">Clave Secreta (Secret Key)</label>
+                            <input type="password" id="culqi_secret_key" name="culqi_secret_key" 
+                                   placeholder="sk_test_..." maxlength="255">
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Configuración PAYPAL -->
+                <div class="payment-section">
+                    <div class="payment-header">
+                        <h3><i class="fab fa-paypal"></i> PayPal</h3>
+                        <label class="switch">
+                            <input type="checkbox" id="paypal_enabled" name="paypal_enabled">
+                            <span class="slider"></span>
+                        </label>
+                    </div>
+                    <div class="payment-fields" id="paypal-fields">
+                        <div class="form-group">
+                            <label for="paypal_client_id">Client ID</label>
+                            <input type="text" id="paypal_client_id" name="paypal_client_id" 
+                                   placeholder="Tu PayPal Client ID" maxlength="255">
+                        </div>
+                        <div class="form-group">
+                            <label for="paypal_client_secret">Client Secret</label>
+                            <input type="password" id="paypal_client_secret" name="paypal_client_secret" 
+                                   placeholder="Tu PayPal Client Secret" maxlength="255">
+                        </div>
+                        <div class="form-group">
+                            <label>
+                                <input type="checkbox" id="paypal_sandbox" name="paypal_sandbox">
+                                Modo Sandbox (Pruebas)
+                            </label>
+                        </div>
+                    </div>
+                </div>
+            </form>
+        </div>
+        <div class="modal-footer">
+            <button type="button" class="btn-secondary-inst" onclick="cerrarModalClavesPago()">
+                Cancelar
+            </button>
+            <button type="button" class="btn-primary-inst" onclick="guardarClavesPago()">
+                <i class="fas fa-save"></i> Guardar Configuración
+            </button>
         </div>
     </div>
 </div>

@@ -4,6 +4,9 @@ const IMGBB_API_KEY = 'f94d58c09424ff225d85feee613de3a6'; // Tu API key actual
 // Variables globales
 let currentImageUrl = null;
 
+// Variables para modal
+let modalClavesPago = null;
+
 // Event listeners al cargar el DOM
 document.addEventListener('DOMContentLoaded', function() {
     console.log('Dashboard Instituciones cargado - usando InsDeporController existente');
@@ -12,6 +15,9 @@ document.addEventListener('DOMContentLoaded', function() {
     initQuickActions();
     initNotifications();
     initImageUpload();
+    
+    modalClavesPago = document.getElementById('modalClavesPago');
+    cargarClavesPagoActuales();
 });
 
 // ✅ NUEVA FUNCIÓN: Inicializar upload de imágenes
@@ -272,6 +278,121 @@ function showNotification(message, type = 'success') {
     setTimeout(() => {
         notification.remove();
     }, 4000);
+}
+
+// ✅ AGREGAR ESTAS FUNCIONES AL ARCHIVO JS
+
+// Cerrar modal
+function cerrarModalClavesPago() {
+    modalClavesPago.style.display = 'none';
+}
+
+// Abrir modal de claves de pago
+function abrirModalClavesPago() {
+    modalClavesPago.style.display = 'block';
+    cargarClavesPagoActuales();
+}
+
+// Cargar configuración actual
+async function cargarClavesPagoActuales() {
+    try {
+        const response = await fetch('../../Controllers/InsDeporController.php?action=obtener_claves_pago');
+        const data = await response.json();
+        
+        if (data.success) {
+            const config = data.configuracion;
+            
+            // CULQI
+            document.getElementById('culqi_enabled').checked = config.culqi_enabled == 1;
+            document.getElementById('culqi_public_key').value = config.culqi_public_key || '';
+            document.getElementById('culqi_secret_key').value = config.culqi_secret_key || '';
+            
+            // PayPal
+            document.getElementById('paypal_enabled').checked = config.paypal_enabled == 1;
+            document.getElementById('paypal_client_id').value = config.paypal_client_id || '';
+            document.getElementById('paypal_client_secret').value = config.paypal_client_secret || '';
+            document.getElementById('paypal_sandbox').checked = config.paypal_sandbox == 1;
+            
+            // Mostrar/ocultar campos según estado
+            togglePaymentFields('culqi', config.culqi_enabled == 1);
+            togglePaymentFields('paypal', config.paypal_enabled == 1);
+        }
+    } catch (error) {
+        console.error('Error cargando configuración:', error);
+        mostrarNotificacion('Error cargando configuración', 'error');
+    }
+}
+
+// Alternar visibilidad de campos
+function togglePaymentFields(provider, enabled) {
+    const fields = document.getElementById(provider + '-fields');
+    if (fields) {
+        fields.style.display = enabled ? 'block' : 'none';
+    }
+}
+
+// Eventos de los switches
+document.addEventListener('DOMContentLoaded', function() {
+    document.getElementById('culqi_enabled').addEventListener('change', function() {
+        togglePaymentFields('culqi', this.checked);
+    });
+    
+    document.getElementById('paypal_enabled').addEventListener('change', function() {
+        togglePaymentFields('paypal', this.checked);
+    });
+});
+
+// Guardar configuración
+async function guardarClavesPago() {
+    try {
+        const datos = {
+            culqi_enabled: document.getElementById('culqi_enabled').checked ? 1 : 0,
+            culqi_public_key: document.getElementById('culqi_public_key').value.trim(),
+            culqi_secret_key: document.getElementById('culqi_secret_key').value.trim(),
+            paypal_enabled: document.getElementById('paypal_enabled').checked ? 1 : 0,
+            paypal_client_id: document.getElementById('paypal_client_id').value.trim(),
+            paypal_client_secret: document.getElementById('paypal_client_secret').value.trim(),
+            paypal_sandbox: document.getElementById('paypal_sandbox').checked ? 1 : 0
+        };
+        
+        // Validaciones
+        if (datos.culqi_enabled && (!datos.culqi_public_key || !datos.culqi_secret_key)) {
+            mostrarNotificacion('Las claves de CULQI son requeridas si está habilitado', 'error');
+            return;
+        }
+        
+        if (datos.paypal_enabled && (!datos.paypal_client_id || !datos.paypal_client_secret)) {
+            mostrarNotificacion('Las claves de PayPal son requeridas si está habilitado', 'error');
+            return;
+        }
+        
+        mostrarNotificacion('Guardando configuración...', 'info');
+        
+        const response = await fetch('../../Controllers/InsDeporController.php?action=actualizar_claves_pago', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(datos)
+        });
+        
+        const result = await response.json();
+        
+        if (result.success) {
+            mostrarNotificacion('✅ Configuración guardada exitosamente', 'success');
+            cerrarModalClavesPago();
+        } else {
+            mostrarNotificacion('❌ ' + result.message, 'error');
+        }
+        
+    } catch (error) {
+        console.error('Error:', error);
+        mostrarNotificacion('❌ Error guardando configuración', 'error');
+    }
+}
+
+// Función para mostrar notificaciones
+function mostrarNotificacion(mensaje, tipo) {
+    // Implementar notificación toast o usar la existente
+    console.log(`${tipo.toUpperCase()}: ${mensaje}`);
 }
 
 // ✅ ESTILOS ADICIONALES

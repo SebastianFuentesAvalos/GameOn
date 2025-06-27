@@ -412,5 +412,68 @@ class InsDeporModel {
         }
         return $rows;
     }
+
+    // ✅ AGREGAR ESTAS FUNCIONES AL MODELO
+
+    public function obtenerConfiguracionPago($usuarioId) {
+        try {
+            $sql = "SELECT culqi_public_key, culqi_secret_key, culqi_enabled, 
+                           paypal_client_id, paypal_client_secret, paypal_enabled, paypal_sandbox
+                    FROM usuarios_instalaciones 
+                    WHERE id = ?";
+            
+            $stmt = $this->conn->prepare($sql);
+            $stmt->bind_param("i", $usuarioId);
+            $stmt->execute();
+            $result = $stmt->get_result();
+            
+            if ($row = $result->fetch_assoc()) {
+                return $row;
+            }
+            
+            return [
+                'culqi_public_key' => '',
+                'culqi_secret_key' => '',
+                'culqi_enabled' => 0,
+                'paypal_client_id' => '',
+                'paypal_client_secret' => '',
+                'paypal_enabled' => 0,
+                'paypal_sandbox' => 1
+            ];
+            
+        } catch (Exception $e) {
+            throw new Exception('Error obteniendo configuración: ' . $e->getMessage());
+        }
+    }
+
+    public function actualizarConfiguracionPago($usuarioId, $datos) {
+        try {
+            $sql = "UPDATE usuarios_instalaciones SET 
+                        culqi_public_key = ?, culqi_secret_key = ?, culqi_enabled = ?,
+                        paypal_client_id = ?, paypal_client_secret = ?, paypal_enabled = ?, paypal_sandbox = ?
+                    WHERE id = ?";
+            
+            $stmt = $this->conn->prepare($sql);
+            $stmt->bind_param("ssississi", 
+                $datos['culqi_public_key'],
+                $datos['culqi_secret_key'],
+                $datos['culqi_enabled'],
+                $datos['paypal_client_id'],
+                $datos['paypal_client_secret'],
+                $datos['paypal_enabled'],
+                $datos['paypal_sandbox'],
+                $usuarioId
+            );
+            
+            if ($stmt->execute()) {
+                return ['success' => true, 'message' => 'Configuración actualizada exitosamente'];
+            } else {
+                throw new Exception('Error ejecutando actualización');
+            }
+            
+        } catch (Exception $e) {
+            return ['success' => false, 'message' => 'Error: ' . $e->getMessage()];
+        }
+    }
 }
 ?>
