@@ -937,26 +937,54 @@ class TorneosManager {
     async procesarInscripcionConPago(torneo, equipoId, metodoPago) {
         const montoPesos = parseFloat(torneo.costo_inscripcion);
         
-        // ✅ CORREGIR: Usar nombres correctos para los campos
+        // ✅ INCLUIR TODOS LOS DATOS NECESARIOS PARA EL BACKEND
         const datosInscripcion = {
-            usuario_id: 1, // ✅ OBTENER DEL SESSION
-            instalacion_id: 1, // ✅ USAR ID DE INSTALACIÓN REAL
-            torneo_id: torneo.id,
-            equipo_id: equipoId,
+            // ✅ DATOS BÁSICOS DEL TORNEO Y EQUIPO
+            torneo_id: parseInt(torneo.id),
+            equipo_id: parseInt(equipoId),
             torneo_nombre: torneo.nombre,
-            // ✅ CORREGIR: Usar 'monto' en lugar de 'costo_inscripcion' para coherencia
+            
+            // ✅ DATOS DE PAGO
             monto: montoPesos,
-            costo_inscripcion: montoPesos, // Mantener ambos por compatibilidad
-            description: `Inscripción al torneo: ${torneo.nombre}`
+            costo_inscripcion: montoPesos,
+            
+            // ✅ DATOS DE USUARIO E INSTALACIÓN (OBTENER DINÁMICAMENTE)
+            usuario_id: this.obtenerUsuarioId(), // Función helper
+            instalacion_id: parseInt(torneo.institucion_sede_id || torneo.sede_id || 1),
+            
+            // ✅ DATOS ADICIONALES
+            description: `Inscripción al torneo: ${torneo.nombre}`,
+            currency: 'PEN',
+            
+            // ✅ METADATA PARA PAYPAL
+            metadata: {
+                tipo: 'inscripcion_torneo',
+                torneo_id: torneo.id,
+                equipo_id: equipoId
+            }
         };
         
-        console.log('🏆 Datos enviados para pago:', datosInscripcion);
+        console.log('🏆 Datos completos para pago:', datosInscripcion);
         
         if (metodoPago === 'culqi') {
             this.procesarPagoCulqi(datosInscripcion);
         } else if (metodoPago === 'paypal') {
             this.procesarPagoPayPal(datosInscripcion);
         }
+    }
+
+    obtenerUsuarioId() {
+        // Intentar obtener desde diferentes fuentes
+        if (window.USER_ID) return parseInt(window.USER_ID);
+        if (window.userId) return parseInt(window.userId);
+        
+        // Si no está disponible, obtener desde PHP session
+        const metaUserId = document.querySelector('meta[name="user-id"]');
+        if (metaUserId) return parseInt(metaUserId.content);
+        
+        // Fallback: valor por defecto (no recomendado para producción)
+        console.warn('⚠️ USER_ID no encontrado, usando fallback');
+        return 1;
     }
 
     // PROCESAR PAGO CON CULQI
@@ -1000,7 +1028,7 @@ class TorneosManager {
         });
     }
 
-    // PROCESAR PAGO CON PAYPAL
+    // ✅ CORREGIR: Función procesarPagoPayPal
     procesarPagoPayPal(datosInscripcion) {
         console.log('🏆 Procesando pago PayPal para torneo:', datosInscripcion);
         
@@ -1011,22 +1039,52 @@ class TorneosManager {
         
         this.cerrarModalInscripcion();
         
-        // ✅ USAR LÓGICA IDÉNTICA A RESERVAS
+        // ✅ USAR CALLBACK MEJORADO CON DATOS COMPLETOS
         window.paypalIntegration.iniciarPagoTorneo(datosInscripcion, async (paymentId, payerId) => {
             try {
                 console.log('✅ Pago PayPal exitoso para torneo:', { paymentId, payerId });
                 
+                // ✅ ENVIAR TODOS LOS DATOS NECESARIOS AL BACKEND
+                const datosCompletos = {
+                    ...datosInscripcion,
+                    paypal_payment_id: paymentId,
+                    paypal_payer_id: payerId,
+                    // ✅ ASEGURAR QUE ESTOS CAMPOS ESTÉN PRESENTES
+                    torneo_id: datosInscripcion.torneo_id,
+                    equipo_id: datosInscripcion.equipo_id,
+                    usuario_id: datosInscripcion.usuario_id,
+                    monto_pagado: datosInscripcion.monto
+                };
+                
+                console.log('📤 Enviando al backend:', datosCompletos);
+                
                 const response = await fetch(`${this.baseUrl}?action=inscribir_equipo_paypal`, {
                     method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({
-                        ...datosInscripcion,
-                        paypal_payment_id: paymentId,
-                        paypal_payer_id: payerId
-                    })
+                    headers: { 
+                        'Content-Type': 'application/json',
+                        'Accept': 'application/json'
+                    },
+                    body: JSON.stringify(datosCompletos)
                 });
                 
-                const data = await response.json();
+                // ✅ MANEJAR RESPUESTA COMO EN RESERVAS
+                if (!response.ok) {
+                    const errorText = await response.text();
+                    console.error('❌ HTTP Error:', response.status, errorText);
+                    throw new Error(`HTTP ${response.status}: ${errorText.substring(0, 200)}`);
+                }
+                
+                const responseText = await response.text();
+                console.log('📡 Response text crudo:', responseText);
+                
+                // ✅ VERIFICAR QUE SEA JSON VÁLIDO
+                if (!responseText.trim().startsWith('{')) {
+                    console.error('❌ Response no es JSON:', responseText);
+                    throw new Error('El servidor no devolvió JSON válido: ' + responseText.substring(0, 100));
+                }
+                
+                const data = JSON.parse(responseText);
+                console.log('✅ Respuesta parseada:', data);
                 
                 if (data.success) {
                     this.mostrarExitoInscripcion('¡Equipo inscrito y pago procesado exitosamente con PayPal!');
@@ -1036,8 +1094,8 @@ class TorneosManager {
                 }
                 
             } catch (error) {
-                console.error('Error:', error);
-                this.mostrarError('Error procesando pago con PayPal');
+                console.error('❌ Error completo en procesarPagoPayPal:', error);
+                this.mostrarError('Error procesando pago con PayPal: ' + error.message);
             }
         });
     }

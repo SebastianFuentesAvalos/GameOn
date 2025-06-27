@@ -91,6 +91,9 @@ include_once 'header.php';
 
 <script>
 window.chatDisabled = true;
+// ✅ AGREGAR USER_ID PARA JAVASCRIPT
+window.USER_ID = <?php echo json_encode($_SESSION['user_id'] ?? null); ?>;
+window.USER_TYPE = <?php echo json_encode($_SESSION['user_type'] ?? null); ?>;
 </script>
 
 <!-- Script específico para torneos -->

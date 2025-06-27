@@ -350,13 +350,15 @@ class TorneosModel {
 
     public function inscribirEquipoConPago($torneoId, $equipoId, $metodoPago, $transactionId, $payerId = null, $montoPagado = 0) {
         try {
+            error_log("TorneosModel - inscribirEquipoConPago iniciado con: torneoId=$torneoId, equipoId=$equipoId, metodoPago=$metodoPago, monto=$montoPagado");
+            
             // ✅ VERIFICAR QUE EL TORNEO TENGA CUPOS
-            $query = "SELECT t.max_equipos, COUNT(te.id) as equipos_inscritos, t.costo_inscripcion
+            $query = "SELECT t.id, t.max_equipos, COUNT(te.id) as equipos_inscritos, t.costo_inscripcion, t.estado
                       FROM torneos t
                       LEFT JOIN torneos_equipos te ON t.id = te.torneo_id
                       WHERE t.id = ? AND t.estado = 'inscripciones_abiertas'
                       GROUP BY t.id";
-            
+        
             $stmt = $this->conn->prepare($query);
             $stmt->bind_param("i", $torneoId);
             $stmt->execute();
@@ -368,6 +370,8 @@ class TorneosModel {
                 return ['success' => false, 'message' => 'Torneo no encontrado o inscripciones cerradas'];
             }
             
+            error_log("TorneosModel - Torneo encontrado: " . print_r($torneo, true));
+            
             if ($torneo['equipos_inscritos'] >= $torneo['max_equipos']) {
                 return ['success' => false, 'message' => 'No hay cupos disponibles'];
             }
@@ -377,8 +381,8 @@ class TorneosModel {
                 return ['success' => false, 'message' => 'El equipo ya está inscrito en este torneo'];
             }
             
-            // ✅ OBTENER USUARIO_ID DEL CREADOR DEL EQUIPO
-            $queryCreador = "SELECT creador_id FROM equipos WHERE id = ?";
+            // ✅ OBTENER CREADOR DEL EQUIPO
+            $queryCreador = "SELECT creador_id FROM equipos WHERE id = ? AND estado = 1";
             $stmtCreador = $this->conn->prepare($queryCreador);
             $stmtCreador->bind_param("i", $equipoId);
             $stmtCreador->execute();
@@ -390,19 +394,31 @@ class TorneosModel {
                 return ['success' => false, 'message' => 'Equipo no encontrado'];
             }
             
-            // ✅ INSERTAR INSCRIPCIÓN
+            error_log("TorneosModel - Equipo encontrado, creador: " . $equipo['creador_id']);
+            
+            // ✅ INSERTAR INSCRIPCIÓN CON DATOS COMPLETOS
             $queryInsert = "INSERT INTO torneos_equipos 
                            (torneo_id, equipo_id, inscrito_por_usuario_id, fecha_inscripcion, estado_inscripcion, metodo_pago, transaction_id, payer_id, monto_pagado) 
                            VALUES (?, ?, ?, NOW(), 'confirmada', ?, ?, ?, ?)";
-            
+        
             $stmt = $this->conn->prepare($queryInsert);
-            $stmt->bind_param("isssd", $torneoId, $equipoId, $equipo['creador_id'], $metodoPago, $transactionId, $payerId, $montoPagado);
+            $stmt->bind_param("isisssd", 
+                $torneoId, 
+                $equipoId, 
+                $equipo['creador_id'], 
+                $metodoPago, 
+                $transactionId, 
+                $payerId, 
+                $montoPagado
+            );
             
             if ($stmt->execute()) {
                 $inscripcionId = $this->conn->insert_id;
                 $stmt->close();
                 
-                // ✅ ACTUALIZAR CONTADOR DE EQUIPOS INSCRITOS EN EL TORNEO
+                error_log("TorneosModel - Inscripción creada con ID: " . $inscripcionId);
+                
+                // ✅ ACTUALIZAR CONTADOR DE EQUIPOS INSCRITOS
                 $queryActualizar = "UPDATE torneos SET equipos_inscritos = equipos_inscritos + 1 WHERE id = ?";
                 $stmtActualizar = $this->conn->prepare($queryActualizar);
                 $stmtActualizar->bind_param("i", $torneoId);
@@ -412,16 +428,23 @@ class TorneosModel {
                 return [
                     'success' => true,
                     'inscripcion_id' => $inscripcionId,
-                    'message' => 'Equipo inscrito exitosamente'
+                    'message' => 'Equipo inscrito exitosamente con ' . strtoupper($metodoPago),
+                    'datos' => [
+                        'torneo_id' => $torneoId,
+                        'equipo_id' => $equipoId,
+                        'monto_pagado' => $montoPagado,
+                        'metodo_pago' => $metodoPago
+                    ]
                 ];
             } else {
                 $error = $stmt->error;
                 $stmt->close();
-                throw new Exception('Error SQL: ' . $error);
+                error_log("TorneosModel - Error SQL: " . $error);
+                throw new Exception('Error SQL al insertar inscripción: ' . $error);
             }
             
         } catch (Exception $e) {
-            error_log("Error inscribiendo equipo: " . $e->getMessage());
+            error_log("TorneosModel - Error inscribiendo equipo: " . $e->getMessage());
             return ['success' => false, 'message' => 'Error: ' . $e->getMessage()];
         }
     }

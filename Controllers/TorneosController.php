@@ -512,30 +512,97 @@ class TorneosController {
     }
 
     public function inscribirEquipoConPayPal() {
-        if (!$this->verificarAutenticacion()) return;
+        // ✅ LIMPIAR OUTPUT Y CONFIGURAR HEADERS
+        if (ob_get_length()) ob_clean();
+        header('Content-Type: application/json; charset=utf-8');
+        header('Access-Control-Allow-Origin: *');
+        header('Access-Control-Allow-Methods: POST');
+        header('Access-Control-Allow-Headers: Content-Type');
+        
+        if (!$this->verificarAutenticacion()) {
+            echo json_encode(['success' => false, 'message' => 'No autenticado']);
+            exit;
+        }
         
         try {
-            $input = json_decode(file_get_contents('php://input'), true);
+            // ✅ LEER INPUT JSON CON VALIDACIÓN
+            $rawInput = file_get_contents('php://input');
+            error_log("PayPal Torneo - Raw input: " . $rawInput);
             
-            $torneoId = $input['torneo_id'] ?? null;
-            $equipoId = $input['equipo_id'] ?? null;
-            $paypalPaymentId = $input['paypal_payment_id'] ?? null;
-            $paypalPayerId = $input['paypal_payer_id'] ?? null;
-            $montoPagado = floatval($input['monto'] ?? 0);
-            
-            if (!$torneoId || !$equipoId || !$paypalPaymentId) {
-                throw new Exception('Datos insuficientes para la inscripción');
+            if (empty($rawInput)) {
+                throw new Exception('No se recibió contenido JSON');
             }
             
+            $input = json_decode($rawInput, true);
+            if (json_last_error() !== JSON_ERROR_NONE) {
+                throw new Exception('JSON inválido: ' . json_last_error_msg());
+            }
+            
+            error_log("PayPal Torneo - Input decodificado: " . print_r($input, true));
+            
+            // ✅ EXTRAER Y VALIDAR DATOS CON NOMBRES CORRECTOS
+            $torneoId = intval($input['torneo_id'] ?? 0);
+            $equipoId = intval($input['equipo_id'] ?? 0);
+            $usuarioId = intval($input['usuario_id'] ?? $_SESSION['user_id'] ?? 0);
+            $paypalPaymentId = trim($input['paypal_payment_id'] ?? '');
+            $paypalPayerId = trim($input['paypal_payer_id'] ?? 'sandbox_payer');
+            $montoPagado = floatval($input['monto'] ?? $input['monto_pagado'] ?? $input['costo_inscripcion'] ?? 0);
+            
+            error_log("PayPal Torneo - Datos extraídos: Torneo=$torneoId, Equipo=$equipoId, Usuario=$usuarioId, Monto=$montoPagado");
+            
+            // ✅ VALIDACIONES MEJORADAS
+            if ($torneoId <= 0) {
+                throw new Exception('ID de torneo inválido: ' . $torneoId);
+            }
+            
+            if ($equipoId <= 0) {
+                throw new Exception('ID de equipo inválido: ' . $equipoId);
+            }
+            
+            if ($usuarioId <= 0) {
+                throw new Exception('ID de usuario inválido: ' . $usuarioId);
+            }
+            
+            if (empty($paypalPaymentId)) {
+                throw new Exception('Payment ID de PayPal requerido');
+            }
+            
+            if ($montoPagado <= 0) {
+                throw new Exception('Monto de pago inválido: ' . $montoPagado);
+            }
+            
+            error_log("PayPal Torneo - Validaciones pasadas, procesando inscripción...");
+            
+            // ✅ PROCESAR INSCRIPCIÓN CON PAGO
             $resultado = $this->torneosModel->inscribirEquipoConPago(
-                $torneoId, $equipoId, 'paypal', $paypalPaymentId, $paypalPayerId, $montoPagado
+                $torneoId, 
+                $equipoId, 
+                'paypal', 
+                $paypalPaymentId, 
+                $paypalPayerId, 
+                $montoPagado
             );
             
-            $this->response($resultado);
+            error_log("PayPal Torneo - Resultado inscripción: " . print_r($resultado, true));
+            
+            // ✅ ENVIAR RESPUESTA JSON LIMPIA
+            echo json_encode($resultado, JSON_UNESCAPED_UNICODE);
+            exit;
             
         } catch (Exception $e) {
-            error_log("Error inscripción PayPal: " . $e->getMessage());
-            $this->response(['success' => false, 'message' => 'Error: ' . $e->getMessage()]);
+            error_log("PayPal Torneo - ERROR: " . $e->getMessage());
+            error_log("PayPal Torneo - ERROR Trace: " . $e->getTraceAsString());
+            
+            echo json_encode([
+                'success' => false,
+                'message' => 'Error: ' . $e->getMessage(),
+                'error_type' => get_class($e),
+                'debug_info' => [
+                    'line' => $e->getLine(),
+                    'file' => basename($e->getFile())
+                ]
+            ], JSON_UNESCAPED_UNICODE);
+            exit;
         }
     }
 
