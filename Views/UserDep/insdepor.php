@@ -17,25 +17,11 @@ include_once 'header.php';
 
 <link rel="stylesheet" href="../../Public/css/insdepor_dep.css">
 <link rel="stylesheet" href="../../Public/css/modal_insdepor.css">
+<link rel="stylesheet" href="../../Public/css/instalaciones-chat.css">
 
 <div class="container mt-4">
-    <div class="dashboard-row">
-        <!-- Instalaciones Deportivas -->
-        <div class="dashboard-card">
-            <h2>MAPA DE INSTALACIONES DEPORTIVAS</h2>
-            <div id="map" style="height: 400px; width:100%; background-color: #f0f0f0; display: flex; align-items: center; justify-content: center;">
-                <div class="text-center">
-                    <div class="spinner-border" role="status">
-                        <span class="visually-hidden">Cargando mapa...</span>
-                    </div>
-                    <p>Cargando mapa de instalaciones...</p>
-                </div>
-            </div>
-        </div>
-
-        <!-- FILTROS -->
-        <div class="dashboard-card">
-            <h2>FILTROS</h2>
+    <div class="dashboard-wide-card">
+        <h2>FILTROS</h2>
             <div class="row">
                 <div class="col-md-6">
                     <div class="form-group">
@@ -70,9 +56,18 @@ include_once 'header.php';
                 <button id="btnFiltrar" class="btn btn-primary">Aplicar filtros</button>
                 <button id="btnCercanas" class="btn btn-primary">Instalaciones cercanas</button>
             </div>
+    </div>
+    <div class="dashboard-wide-card">
+        <h2>MAPA DE INSTALACIONES DEPORTIVAS</h2>
+        <div id="map" style="height: 400px; width:100%; background-color: #f0f0f0; display: flex; align-items: center; justify-content: center;">
+            <div class="text-center">
+                <div class="spinner-border" role="status">
+                    <span class="visually-hidden">Cargando mapa...</span>
+                </div>
+                <p>Cargando mapa de instalaciones...</p>
+            </div>
         </div>
     </div>
-
     <!-- mapa de instalaciones -->
     <div class="dashboard-wide-card">
         <h2>LISTADOS DE INSTALACIONES DEPORTIVAS</h2>
@@ -168,6 +163,15 @@ include_once 'header.php';
                                             data-nombre="<?= htmlspecialchars($instalacion['nombre']) ?>">
                                         <i class="fas fa-map"></i> Mapa
                                     </button>
+                                    
+                                    <!-- ✅ NUEVO BOTÓN DE RUTAS -->
+                                    <button class="action-btn btn-rutas" 
+                                            data-id="<?= $instalacion['id'] ?>"
+                                            data-lat="<?= $instalacion['latitud'] ?>" 
+                                            data-lng="<?= $instalacion['longitud'] ?>" 
+                                            data-nombre="<?= htmlspecialchars($instalacion['nombre']) ?>">
+                                        <i class="fas fa-route"></i> Cómo llegar
+                                    </button>
                                 </div>
                                 
                                 <!-- Horarios expandibles -->
@@ -211,73 +215,103 @@ window.chatDisabled = true;
 </script>
 
 <!-- Scripts -->
+<script src="../../Public/js/instalaciones-chat.js"></script>
 <script src="../../Public/js/insdepor.js"></script>
+
 <script>
-    // Función global para inicializar el mapa (requerida por Google Maps API)
-    function initMap() {
-        console.log('initMap llamada desde Google Maps API');
-        if (window.insDeporManager) {
-            window.insDeporManager.initMap();
-        } else {
-            console.log('insDeporManager no está disponible aún, esperando...');
-            setTimeout(() => {
-                if (window.insDeporManager) {
-                    window.insDeporManager.initMap();
-                } else {
-                    console.error('insDeporManager no se pudo cargar');
-                    document.getElementById('map').innerHTML = '<div class="text-center text-danger"><i class="fas fa-exclamation-triangle"></i><br>Error cargando el mapa</div>';
-                }
-            }, 1000);
-        }
-    }
-
-    // Función para manejar errores del mapa
-    function handleMapError() {
-        console.error('Error cargando Google Maps API');
-        document.getElementById('map').innerHTML = '<div class="text-center text-warning"><i class="fas fa-map-marked-alt"></i><br>Mapa no disponible temporalmente</div>';
-    }
-
-    // Cargar Google Maps API de forma asíncrona
-    function loadGoogleMaps() {
-        // Verificar si ya está cargado
-        if (window.google && window.google.maps) {
-            initMap();
-            return;
-        }
-
-        // Crear script para cargar Google Maps
-        const script = document.createElement('script');
-        script.src = 'https://maps.googleapis.com/maps/api/js?key=AIzaSyBjRa0PWfLEyt1Ba02c-3M6zWnyEM7lU2A&loading=async&callback=initMap';
-        script.async = true;
-        script.defer = true;
-        script.onerror = handleMapError;
-        document.head.appendChild(script);
-    }
-
-    // Inicializar cuando el DOM esté listo
-    document.addEventListener('DOMContentLoaded', function() {
-        const instalacionesData = <?= json_encode($instalaciones) ?>;
-        const highlightId = <?= json_encode($highlightId) ?>;
+// ✅ FUNCIÓN GLOBAL PARA VER DETALLES DESDE MAPA
+function verDetallesDesdeMap(instalacionId) {
+    console.log('Ver detalles de instalación:', instalacionId);
+    
+    // Scroll a la instalación en la lista
+    const instalacionCard = document.querySelector(`.instalacion-card[data-id="${instalacionId}"]`);
+    if (instalacionCard) {
+        instalacionCard.scrollIntoView({ 
+            behavior: 'smooth', 
+            block: 'center' 
+        });
         
-        window.insDeporManager = new InsDeporManager(instalacionesData);
+        // ✅ RESALTAR LA INSTALACIÓN
+        instalacionCard.classList.add('highlight');
+        setTimeout(() => {
+            instalacionCard.classList.remove('highlight');
+        }, 3000);
         
-        // Si hay una instalación para resaltar, hacerlo después de cargar
-        if (highlightId) {
-            setTimeout(() => {
-                const instalacion = document.querySelector(`.instalacion-card[data-id="${highlightId}"]`);
-                if (instalacion) {
-                    instalacion.scrollIntoView({ behavior: 'smooth', block: 'center' });
-                    // Mantener el resaltado por más tiempo cuando viene del dashboard
-                    setTimeout(() => {
-                        instalacion.classList.remove('highlight');
-                    }, 5000);
-                }
-            }, 1000);
+        // ✅ CERRAR INFO WINDOW
+        if (window.insDeporManager && window.insDeporManager.infoWindow) {
+            window.insDeporManager.infoWindow.close();
         }
         
-        // Cargar el mapa después de un breve retraso
-        setTimeout(loadGoogleMaps, 500);
-    });
+        // Mostrar notificación
+        mostrarNotificacion(`📍 Mostrando detalles de la instalación`, 'success');
+    } else {
+        mostrarNotificacion('❌ No se pudo encontrar la instalación', 'error');
+    }
+}
+
+// Función global para inicializar el mapa (requerida por Google Maps API)
+function initMap() {
+    console.log('initMap llamada desde Google Maps API');
+    if (window.insDeporManager) {
+        window.insDeporManager.initMap();
+    } else {
+        console.log('insDeporManager no está disponible aún, esperando...');
+        setTimeout(() => {
+            if (window.insDeporManager) {
+                window.insDeporManager.initMap();
+            } else {
+                console.error('insDeporManager no se pudo cargar');
+                document.getElementById('map').innerHTML = '<div class="text-center text-danger"><i class="fas fa-exclamation-triangle"></i><br>Error cargando el mapa</div>';
+            }
+        }, 1000);
+    }
+}
+
+function handleMapError() {
+    console.error('Error cargando Google Maps API');
+    document.getElementById('map').innerHTML = '<div class="text-center text-warning"><i class="fas fa-map-marked-alt"></i><br>Mapa no disponible temporalmente</div>';
+}
+
+function loadGoogleMaps() {
+    if (window.google && window.google.maps) {
+        initMap();
+        return;
+    }
+
+    const script = document.createElement('script');
+    script.src = 'https://maps.googleapis.com/maps/api/js?key=AIzaSyB2uyZCjZlmJLAIvQ0POB5SsAkvn8ixyv8&libraries=places,geometry&callback=initMap';
+    script.async = true;
+    script.defer = true;
+    script.onerror = handleMapError;
+    document.head.appendChild(script);
+}
+
+document.addEventListener('DOMContentLoaded', function() {
+    console.log('🚀 DOM cargado, inicializando...');
+    
+    const instalacionesData = <?= json_encode($instalaciones) ?>;
+    const highlightId = <?= json_encode($highlightId) ?>;
+    
+    console.log('📊 Instalaciones cargadas:', instalacionesData.length);
+    
+    window.insDeporManager = new InsDeporManager(instalacionesData);
+    console.log('✅ InsDeporManager creado');
+    
+    if (highlightId) {
+        setTimeout(() => {
+            const instalacion = document.querySelector(`.instalacion-card[data-id="${highlightId}"]`);
+            if (instalacion) {
+                instalacion.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                setTimeout(() => {
+                    instalacion.classList.remove('highlight');
+                }, 5000);
+            }
+        }, 1000);
+    }
+    
+    // Cargar el mapa después
+    setTimeout(loadGoogleMaps, 500);
+});
 </script>
 
 <?php

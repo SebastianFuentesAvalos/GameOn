@@ -369,7 +369,7 @@ include_once 'header.php';
         
         // Crear script para cargar Google Maps
         const script = document.createElement('script');
-        script.src = 'https://maps.googleapis.com/maps/api/js?key=AIzaSyBjRa0PWfLEyt1Ba02c-3M6zWnyEM7lU2A&loading=async&callback=initMap';
+        script.src = 'https://maps.googleapis.com/maps/api/js?key=AIzaSyB2uyZCjZlmJLAIvQ0POB5SsAkvn8ixyv8&loading=async&callback=initMap';
         script.async = true;
         script.defer = true;
         script.onerror = handleMapError;

@@ -7,6 +7,8 @@ class InsDeporManager {
         this.userMarker = null;
         this.facilities = this.procesarInstalaciones();
         this.mapLoaded = false;
+        this.currentDirectionsRenderer = null;
+        this.rutaInfoWindow = null;
         
         this.init();
     }
@@ -140,8 +142,6 @@ class InsDeporManager {
     
     initMap() {
         console.log('Inicializando mapa...');
-        
-        // Verificar que el elemento del mapa exista
         const mapElement = document.getElementById("map");
         if (!mapElement) {
             console.error('Elemento del mapa no encontrado');
@@ -149,20 +149,133 @@ class InsDeporManager {
         }
         
         // Coordenadas predeterminadas (Tacna, Perú)
-        const defaultLocation = { lat: -18.0066, lng: -70.2463 };
+        const defaultLocation = { lat: -18.005618, lng: -70.225320 };
         
         try {
-            // Crear el mapa
+            // ✅ CREAR EL MAPA CON ESTILOS MEJORADOS
             this.map = new google.maps.Map(mapElement, {
                 zoom: 14,
                 center: defaultLocation,
                 mapTypeId: google.maps.MapTypeId.ROADMAP,
+                // ✅ ESTILOS OSCUROS PERO CON CALLES VISIBLES
                 styles: [
-                    { elementType: "geometry", stylers: [{ color: "#242f3e" }] },
-                    { elementType: "labels.text.stroke", stylers: [{ color: "#242f3e" }] },
-                    { elementType: "labels.text.fill", stylers: [{ color: "#746855" }] }
-                    // ... resto de estilos
-                ]
+                    {
+                        "elementType": "geometry",
+                        "stylers": [{"color": "#212121"}]
+                    },
+                    {
+                        "elementType": "labels.icon",
+                        "stylers": [{"visibility": "off"}]
+                    },
+                    {
+                        "elementType": "labels.text.fill",
+                        "stylers": [{"color": "#757575"}]
+                    },
+                    {
+                        "elementType": "labels.text.stroke",
+                        "stylers": [{"color": "#212121"}]
+                    },
+                    {
+                        "featureType": "administrative",
+                        "elementType": "geometry",
+                        "stylers": [{"color": "#757575"}]
+                    },
+                    {
+                        "featureType": "administrative.country",
+                        "elementType": "labels.text.fill",
+                        "stylers": [{"color": "#9e9e9e"}]
+                    },
+                    {
+                        "featureType": "administrative.land_parcel",
+                        "stylers": [{"visibility": "off"}]
+                    },
+                    {
+                        "featureType": "administrative.locality",
+                        "elementType": "labels.text.fill",
+                        "stylers": [{"color": "#bdbdbd"}]
+                    },
+                    {
+                        "featureType": "poi",
+                        "elementType": "labels.text.fill",
+                        "stylers": [{"color": "#757575"}]
+                    },
+                    {
+                        "featureType": "poi.park",
+                        "elementType": "geometry",
+                        "stylers": [{"color": "#181818"}]
+                    },
+                    {
+                        "featureType": "poi.park",
+                        "elementType": "labels.text.fill",
+                        "stylers": [{"color": "#616161"}]
+                    },
+                    {
+                        "featureType": "poi.park",
+                        "elementType": "labels.text.stroke",
+                        "stylers": [{"color": "#1b1b1b"}]
+                    },
+                    {
+                        "featureType": "road",
+                        "elementType": "geometry.fill",
+                        "stylers": [{"color": "#2c2c2c"}]
+                    },
+                    {
+                        "featureType": "road",
+                        "elementType": "labels.text.fill",
+                        "stylers": [{"color": "#8a8a8a"}]
+                    },
+                    {
+                        "featureType": "road.arterial",
+                        "elementType": "geometry",
+                        "stylers": [{"color": "#373737"}]
+                    },
+                    {
+                        "featureType": "road.highway",
+                        "elementType": "geometry",
+                        "stylers": [{"color": "#3c3c3c"}]
+                    },
+                    {
+                        "featureType": "road.highway.controlled_access",
+                        "elementType": "geometry",
+                        "stylers": [{"color": "#4e4e4e"}]
+                    },
+                    {
+                        "featureType": "road.local",
+                        "elementType": "labels.text.fill",
+                        "stylers": [{"color": "#616161"}]
+                    },
+                    {
+                        "featureType": "transit",
+                        "elementType": "labels.text.fill",
+                        "stylers": [{"color": "#757575"}]
+                    },
+                    {
+                        "featureType": "water",
+                        "elementType": "geometry",
+                        "stylers": [{"color": "#000000"}]
+                    },
+                    {
+                        "featureType": "water",
+                        "elementType": "labels.text.fill",
+                        "stylers": [{"color": "#3d3d3d"}]
+                    }
+                ],
+                // ✅ OPCIONES ADICIONALES
+                mapTypeControl: true,
+                mapTypeControlOptions: {
+                    style: google.maps.MapTypeControlStyle.HORIZONTAL_BAR,
+                    position: google.maps.ControlPosition.TOP_CENTER,
+                },
+                zoomControl: true,
+                zoomControlOptions: {
+                    position: google.maps.ControlPosition.RIGHT_CENTER,
+                },
+                scaleControl: true,
+                streetViewControl: true,
+                streetViewControlOptions: {
+                    position: google.maps.ControlPosition.RIGHT_TOP,
+                },
+                fullscreenControl: true,
             });
             
             this.infoWindow = new google.maps.InfoWindow();
@@ -201,19 +314,21 @@ class InsDeporManager {
     
     addUserMarker(location) {
         if (!this.map) return;
-        
         this.userMarker = new google.maps.Marker({
-            position: location,
             map: this.map,
+            position: location,
             title: "Tu ubicación",
             icon: {
-                path: google.maps.SymbolPath.CIRCLE,
-                scale: 10,
-                fillColor: "#00bcd4",
-                fillOpacity: 1,
-                strokeColor: "#ffffff",
-                strokeWeight: 2,
+                url: 'data:image/svg+xml;charset=UTF-8,' + encodeURIComponent(`
+                    <svg width="24" height="24" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                        <circle cx="12" cy="12" r="8" fill="#00bcd4" stroke="#fff" stroke-width="2"/>
+                        <circle cx="12" cy="12" r="3" fill="#fff"/>
+                    </svg>
+                `),
+                scaledSize: new google.maps.Size(24, 24),
+                anchor: new google.maps.Point(12, 12)
             },
+            animation: google.maps.Animation.BOUNCE
         });
     }
     
@@ -237,57 +352,99 @@ class InsDeporManager {
         
         this.facilities.forEach((facility) => {
             const marker = new google.maps.Marker({
-                position: facility.position,
                 map: this.map,
+                position: facility.position,
                 title: facility.name,
                 icon: {
-                    path: google.maps.SymbolPath.CIRCLE,
-                    scale: 8,
-                    fillColor: "#006644",
-                    fillOpacity: 1,
-                    strokeColor: "#00bcd4",
-                    strokeWeight: 2,
-                }
+                    url: 'data:image/svg+xml;charset=UTF-8,' + encodeURIComponent(`
+                        <svg width="32" height="32" viewBox="0 0 32 32" xmlns="http://www.w3.org/2000/svg">
+                            <circle cx="16" cy="16" r="12" fill="#006644" stroke="#fff" stroke-width="2"/>
+                            <text x="16" y="20" text-anchor="middle" fill="white" font-size="12">🏟️</text>
+                        </svg>
+                    `),
+                    scaledSize: new google.maps.Size(32, 32),
+                    anchor: new google.maps.Point(16, 16)
+                },
+                animation: google.maps.Animation.DROP
             });
             
             this.markers.push(marker);
             
-            // ✅ ENCONTRAR LA INSTALACIÓN COMPLETA CON IMAGEN
             const instalacionCompleta = this.instalaciones.find(inst => inst.id === facility.id);
-            const imagenUrl = instalacionCompleta?.imagen || '../../Resources/default_instalacion.jpg';
             
-            marker.addListener("click", () => {
-                // ✅ INFO WINDOW CON DISEÑO OSCURO Y SIN BOTÓN VER DETALLES
-                const infoContent = `
-                    <div class="info-window-custom">
-                        <div class="info-header">
-                            <img src="${imagenUrl}" alt="${facility.name}" class="info-image" 
-                                 onerror="this.src='../../Resources/default_instalacion.jpg'">
-                        </div>
-                        <div class="info-body">
-                            <h3 class="info-title">${facility.name}</h3>
-                            <div class="info-details">
-                                <p class="info-sport">
-                                    <i class="fas fa-running"></i>
-                                    ${facility.type}
-                                </p>
-                                <p class="info-price">
-                                    <i class="fas fa-money-bill-wave"></i>
-                                    Tarifa: ${facility.tarifa}
-                                </p>
-                                <p class="info-rating">
-                                    <i class="fas fa-star"></i>
-                                    ${facility.calificacion.toFixed(1)} estrellas
-                                </p>
-                            </div>
-                        </div>
-                    </div>
-                `;
-                
-                this.infoWindow.setContent(infoContent);
-                this.infoWindow.open(this.map, marker);
+            marker.addListener('click', () => {
+                this.mostrarInfoWindow(marker, facility, instalacionCompleta);
+            });
+            
+            marker.addListener('mouseover', () => {
+                marker.setAnimation(google.maps.Animation.BOUNCE);
+            });
+            
+            marker.addListener('mouseout', () => {
+                marker.setAnimation(null);
             });
         });
+        
+        console.log('✅ Marcadores agregados:', this.markers.length);
+    }
+    
+    mostrarInfoWindow(marker, facility, instalacionCompleta) {
+        const imagenUrl = instalacionCompleta?.imagen || '../../Resources/default_instalacion.jpg';
+        
+        const infoContent = `
+            <div class="info-window-custom">
+                <div class="info-header">
+                    <img src="${imagenUrl}" 
+                         alt="${facility.name}" 
+                         class="info-image"
+                         loading="lazy"
+                         onerror="this.parentElement.innerHTML='<div class=\\'info-image-placeholder\\'><i class=\\'fas fa-building\\'></i><span>Sin imagen</span></div>'">
+                </div>
+                <div class="info-body">
+                    <h3 class="info-title">${facility.name}</h3>
+                    <div class="info-details">
+                        <div class="info-sport">
+                            <i class="fas fa-running"></i>
+                            <span>${facility.type}</span>
+                        </div>
+                        <div class="info-price">
+                            <i class="fas fa-money-bill-wave"></i>
+                            <span>Desde ${facility.tarifa}/hora</span>
+                        </div>
+                        <div class="info-rating">
+                            <i class="fas fa-star"></i>
+                            <span>${facility.calificacion.toFixed(1)} estrellas</span>
+                        </div>
+                    </div>
+                </div>
+                <div class="info-actions">
+                    <button class="info-btn info-btn-primary" onclick="verDetallesDesdeMap(${facility.id})">
+                        <i class="fas fa-info-circle"></i>
+                        Ver detalles completos
+                    </button>
+                    
+                    <!-- ✅ NUEVO BOTÓN DE RECORRIDO -->
+                    <button class="info-btn info-btn-route" onclick="window.insDeporManager.iniciarRecorridoCaminando(${facility.position.lat}, ${facility.position.lng}, '${facility.name}')">
+                        <i class="fas fa-route"></i>
+                        Iniciar recorrido a pie
+                    </button>
+                </div>
+            </div>
+        `;
+        
+        if (!this.infoWindow) {
+            this.infoWindow = new google.maps.InfoWindow({
+                pixelOffset: new google.maps.Size(0, -10)
+            });
+        }
+        
+        this.infoWindow.setContent(infoContent);
+        this.infoWindow.open(this.map, marker);
+        this.map.panTo(marker.position);
+        
+        if (this.map.getZoom() < 15) {
+            this.map.setZoom(15);
+        }
     }
     
     toggleHorarios(id, button) {
@@ -303,6 +460,7 @@ class InsDeporManager {
         }
     }
     
+    // ✅ MEJORAR FUNCIÓN centrarMapa
     centrarMapa(lat, lng, nombre) {
         if (!this.map) {
             console.log('Mapa no está inicializado');
@@ -310,18 +468,577 @@ class InsDeporManager {
         }
         
         const position = { lat, lng };
-        this.map.setCenter(position);
-        this.map.setZoom(16);
         
-        // Abrir info window en el marcador correspondiente
-        for (let i = 0; i < this.markers.length; i++) {
-            if (this.markers[i].getTitle() === nombre) {
-                google.maps.event.trigger(this.markers[i], 'click');
-                break;
+        // ✅ ANIMACIÓN SUAVE AL CENTRAR
+        this.map.panTo(position);
+        
+        setTimeout(() => {
+            this.map.setZoom(16);
+            
+            // ✅ ENCONTRAR Y ACTIVAR EL MARCADOR CORRESPONDIENTE
+            const marker = this.markers.find(m => {
+                const markerPos = m.getPosition();
+                return Math.abs(markerPos.lat() - lat) < 0.001 && 
+                       Math.abs(markerPos.lng() - lng) < 0.001;
+            });
+            
+            if (marker) {
+                // ✅ EFECTO DE "REBOTE" EN EL MARCADOR
+                marker.setAnimation(google.maps.Animation.BOUNCE);
+                setTimeout(() => {
+                    marker.setAnimation(null);
+                    // ✅ ABRIR INFO WINDOW DESPUÉS DEL REBOTE
+                    google.maps.event.trigger(marker, 'click');
+                }, 1500);
             }
-        }
+        }, 800);
     }
     
+    mostrarOpcionesRuta(instalacionId, instalacionNombre, lat, lng) {
+        const opciones = [
+            {
+                texto: '🚗 Ruta en auto',
+                action: 'driving',
+                icono: '🚗',
+                descripcion: 'La ruta más rápida en vehículo'
+            },
+            {
+                texto: '🚶 Ruta caminando',
+                action: 'walking',
+                icono: '🚶',
+                descripcion: 'Perfecta para ejercitarse'
+            }
+        ];
+        
+        const contenido = `
+            <div class="rutas-container">
+                <div class="destino-info">
+                    <h4><i class="fas fa-map-marker-alt"></i> ${instalacionNombre}</h4>
+                    <p class="coords">📍 ${lat.toFixed(6)}, ${lng.toFixed(6)}</p>
+                </div>
+                
+                <div class="opciones-ruta">
+                    ${opciones.map(opcion => `
+                        <button class="ruta-option-btn" 
+                                data-action="${opcion.action}"
+                                data-lat="${lat}"
+                                data-lng="${lng}"
+                                data-instalacion="${instalacionId}"
+                                data-nombre="${instalacionNombre}">
+                            <span class="ruta-icon">${opcion.icono}</span>
+                            <div class="ruta-info">
+                                <span class="ruta-text">${opcion.texto}</span>
+                                <small class="ruta-desc">${opcion.descripcion}</small>
+                            </div>
+                            <i class="fas fa-chevron-right"></i>
+                        </button>
+                    `).join('')}
+                </div>
+                
+                <div class="acciones-ruta">
+                    <button class="btn-ubicacion-actual" onclick="window.insDeporManager.obtenerUbicacionUsuario(${lat}, ${lng}, '${instalacionNombre}')">
+                        <i class="fas fa-crosshairs"></i>
+                        Usar mi ubicación actual
+                    </button>
+                    
+                    <button class="btn-abrir-google-maps" onclick="window.insDeporManager.abrirEnGoogleMaps(${lat}, ${lng}, '${instalacionNombre}')">
+                        <i class="fab fa-google"></i>
+                        Abrir en Google Maps
+                    </button>
+                </div>
+                
+                <div id="ruta-resultado" style="display: none;">
+                    <div class="ruta-info-detallada">
+                    </div>
+                </div>
+            </div>
+        `;
+        
+        this.mostrarModal('🗺️ Cómo llegar', contenido);
+        
+        setTimeout(() => {
+            document.querySelectorAll('.ruta-option-btn').forEach(btn => {
+                btn.addEventListener('click', (e) => {
+                    const action = e.currentTarget.getAttribute('data-action');
+                    const lat = parseFloat(e.currentTarget.getAttribute('data-lat'));
+                    const lng = parseFloat(e.currentTarget.getAttribute('data-lng'));
+                    const instalacionId = e.currentTarget.getAttribute('data-instalacion');
+                    const nombre = e.currentTarget.getAttribute('data-nombre');
+                    
+                    this.calcularRutaConGoogleMaps(action, lat, lng, nombre);
+                });
+            });
+        }, 100);
+    }
+
+    async calcularRutaConGoogleMaps(travelMode, destLat, destLng, nombreDestino) {
+        try {
+            const resultadoDiv = document.getElementById('ruta-resultado');
+            resultadoDiv.style.display = 'block';
+            resultadoDiv.innerHTML = `
+                <div class="calculando-ruta">
+                    <div class="ruta-loading">
+                        <i class="fas fa-route"></i>
+                        <p>Calculando la mejor ruta...</p>
+                        <div class="loading-bar">
+                            <div class="loading-progress"></div>
+                        </div>
+                    </div>
+                </div>
+            `;
+            
+            if (!navigator.geolocation) {
+                throw new Error('Geolocalización no disponible');
+            }
+            
+            const position = await this.obtenerPosicionActual();
+            const origen = new google.maps.LatLng(position.coords.latitude, position.coords.longitude);
+            const destino = new google.maps.LatLng(destLat, destLng);
+            
+            const directionsService = new google.maps.DirectionsService();
+            const directionsRenderer = new google.maps.DirectionsRenderer({
+                suppressMarkers: false,
+                suppressInfoWindows: true,
+                polylineOptions: {
+                    strokeColor: '#00bcd4',
+                    strokeWeight: 4,
+                    strokeOpacity: 0.8
+                }
+            });
+            
+            const request = {
+                origin: origen,
+                destination: destino,
+                travelMode: google.maps.TravelMode[travelMode.toUpperCase()],
+                unitSystem: google.maps.UnitSystem.METRIC,
+                avoidHighways: false,
+                avoidTolls: false
+            };
+            
+            if (travelMode === 'transit') {
+                request.transitOptions = {
+                    modes: [
+                        google.maps.TransitMode.BUS,
+                        google.maps.TransitMode.RAIL
+                    ],
+                    routingPreference: google.maps.TransitRoutePreference.FEWER_TRANSFERS
+                };
+            }
+            
+            directionsService.route(request, (result, status) => {
+                if (status === 'OK') {
+                    this.mostrarResultadoRuta(result, travelMode, nombreDestino);
+                    
+                    if (this.map) {
+                        directionsRenderer.setMap(this.map);
+                        directionsRenderer.setDirections(result);
+                        this.map.fitBounds(result.routes[0].bounds);
+                    }
+                } else {
+                    this.mostrarErrorRuta(status, travelMode, destLat, destLng, nombreDestino);
+                }
+            });
+            
+        } catch (error) {
+            console.error('Error calculando ruta:', error);
+            this.mostrarErrorRuta(error.message, travelMode, destLat, destLng, nombreDestino);
+        }
+    }
+
+    obtenerPosicionActual() {
+        return new Promise((resolve, reject) => {
+            navigator.geolocation.getCurrentPosition(
+                resolve,
+                reject,
+                {
+                    enableHighAccuracy: true,
+                    timeout: 10000,
+                    maximumAge: 300000
+                }
+            );
+        });
+    }
+
+    mostrarResultadoRuta(directionsResult, travelMode, nombreDestino) {
+        const route = directionsResult.routes[0];
+        const leg = route.legs[0];
+        
+        const iconos = {
+            'driving': '🚗',
+            'walking': '🚶'
+        };
+        
+        const modos = {
+            'driving': 'En auto',
+            'walking': 'Caminando'
+        };
+        
+        let contenidoRuta = `
+            <div class="ruta-exitosa">
+                <div class="ruta-header">
+                    <h4>${iconos[travelMode]} ${modos[travelMode]} a ${nombreDestino}</h4>
+                    <div class="ruta-resumen">
+                        <div class="ruta-stat">
+                            <i class="fas fa-route"></i>
+                            <span><strong>${leg.distance.text}</strong></span>
+                            <small>Distancia</small>
+                        </div>
+                        <div class="ruta-stat">
+                            <i class="fas fa-clock"></i>
+                            <span><strong>${leg.duration.text}</strong></span>
+                            <small>Tiempo estimado</small>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="ruta-detalles">
+                    <h5><i class="fas fa-list"></i> Instrucciones paso a paso:</h5>
+                    <div class="instrucciones-lista">
+        `;
+        
+        leg.steps.forEach((step, index) => {
+            const instruccion = step.instructions.replace(/<[^>]*>/g, '');
+            let icono = '📍';
+            
+            if (instruccion.includes('left') || instruccion.includes('izquierda')) icono = '↪️';
+            else if (instruccion.includes('right') || instruccion.includes('derecha')) icono = '↩️';
+            else if (instruccion.includes('straight') || instruccion.includes('recto')) icono = '⬆️';
+            else if (instruccion.includes('bus') || instruccion.includes('Bus')) icono = '🚌';
+            
+            contenidoRuta += `
+                <div class="instruccion-paso">
+                    <div class="paso-numero">${index + 1}</div>
+                    <div class="paso-info">
+                        <div class="paso-instruccion">
+                            ${icono} ${instruccion}
+                        </div>
+                        <div class="paso-distancia">
+                            <small>${step.distance.text} • ${step.duration.text}</small>
+                        </div>
+                    </div>
+                </div>
+            `;
+        });
+        
+        if (travelMode === 'transit' && leg.steps.some(step => step.transit)) {
+            contenidoRuta += `
+                <div class="transporte-info">
+                    <h6><i class="fas fa-bus"></i> Información de transporte:</h6>
+            `;
+            
+            leg.steps.forEach(step => {
+                if (step.transit) {
+                    const transit = step.transit;
+                    contenidoRuta += `
+                        <div class="transporte-detalle">
+                            <strong>${transit.line.name || 'Línea de transporte'}</strong>
+                            <div class="paradas-info">
+                                <span>Subir en: ${transit.departure_stop.name}</span>
+                                <span>Bajar en: ${transit.arrival_stop.name}</span>
+                                <span>Paradas: ${transit.num_stops}</span>
+                            </div>
+                        </div>
+                    `;
+                }
+            });
+            
+            contenidoRuta += '</div>';
+        }
+        
+        contenidoRuta += `
+                    </div>
+                </div>
+                
+                <div class="ruta-acciones">
+                    <button class="btn-iniciar-navegacion" onclick="window.insDeporManager.iniciarNavegacion('${leg.start_location.lat()}', '${leg.start_location.lng()}', '${leg.end_location.lat()}', '${leg.end_location.lng()}', '${travelMode}')">
+                        <i class="fas fa-navigation"></i>
+                        Iniciar navegación
+                    </button>
+                    
+                    <button class="btn-compartir-ruta" onclick="window.insDeporManager.compartirRuta('${nombreDestino}', '${leg.distance.text}', '${leg.duration.text}', '${modos[travelMode]}')">
+                        <i class="fas fa-share"></i>
+                        Compartir ruta
+                    </button>
+                </div>
+            </div>
+        `;
+        
+        document.getElementById('ruta-resultado').innerHTML = contenidoRuta;
+    }
+
+    mostrarErrorRuta(status, travelMode, destLat, destLng, nombreDestino) {
+        let mensaje = 'No se pudo calcular la ruta';
+        let solucion = '';
+        
+        switch (status) {
+            case 'ZERO_RESULTS':
+                mensaje = 'No se encontró una ruta disponible';
+                solucion = 'Intenta con otro modo de transporte o verifica la ubicación.';
+                break;
+            case 'OVER_QUERY_LIMIT':
+                mensaje = 'Límite de consultas excedido';
+                solucion = 'Intenta nuevamente en unos minutos.';
+                break;
+            case 'REQUEST_DENIED':
+                mensaje = 'Solicitud denegada';
+                solucion = 'Verifica los permisos de ubicación.';
+                break;
+            case 'INVALID_REQUEST':
+                mensaje = 'Solicitud inválida';
+                solucion = 'Verifica las coordenadas de destino.';
+                break;
+            default:
+                solucion = 'Intenta nuevamente o usa Google Maps directamente.';
+        }
+        
+        const contenidoError = `
+            <div class="ruta-error">
+                <div class="error-icon">❌</div>
+                <h4>${mensaje}</h4>
+                <p>${solucion}</p>
+                
+                <div class="alternativas-error">
+                    <button class="btn-google-maps-fallback" onclick="window.insDeporManager.abrirEnGoogleMaps(${destLat}, ${destLng}, '${nombreDestino}')">
+                        <i class="fab fa-google"></i>
+                        Abrir en Google Maps
+                    </button>
+                    
+                    <button class="btn-reintentar" onclick="window.insDeporManager.calcularRutaConGoogleMaps('${travelMode}', ${destLat}, ${destLng}, '${nombreDestino}')">
+                        <i class="fas fa-redo"></i>
+                        Reintentar
+                    </button>
+                </div>
+            </div>
+        `;
+        
+        document.getElementById('ruta-resultado').innerHTML = contenidoError;
+    }
+
+    iniciarNavegacion(origenLat, origenLng, destinoLat, destinoLng, modo) {
+        const modoGoogle = this.getModoGoogleMaps(modo);
+        const url = `https://www.google.com/maps/dir/${origenLat},${origenLng}/${destinoLat},${destinoLng}/@${destinoLat},${destinoLng},15z/data=!3m1!4b1!4m2!4m1!3e${modoGoogle}`;
+        window.open(url, '_blank');
+    }
+
+    abrirEnGoogleMaps(lat, lng, nombre) {
+        const url = `https://www.google.com/maps/search/${encodeURIComponent(nombre)}/@${lat},${lng},15z`;
+        window.open(url, '_blank');
+    }
+
+    obtenerUbicacionUsuario(destLat, destLng, nombreDestino) {
+        if (navigator.geolocation) {
+            navigator.geolocation.getCurrentPosition(
+                (position) => {
+                    const lat = position.coords.latitude;
+                    const lng = position.coords.longitude;
+                    mostrarNotificacion('📍 Ubicación obtenida. Calculando rutas...', 'success');
+                    
+                    this.calcularRutaConGoogleMaps('driving', destLat, destLng, nombreDestino);
+                },
+                (error) => {
+                    let mensaje = 'No se pudo obtener la ubicación';
+                    switch (error.code) {
+                        case error.PERMISSION_DENIED:
+                            mensaje = 'Permiso de ubicación denegado';
+                            break;
+                        case error.POSITION_UNAVAILABLE:
+                            mensaje = 'Ubicación no disponible';
+                            break;
+                        case error.TIMEOUT:
+                            mensaje = 'Tiempo de espera agotado';
+                            break;
+                    }
+                    mostrarNotificacion(`❌ ${mensaje}`, 'error');
+                }
+            );
+        } else {
+            mostrarNotificacion('❌ Geolocalización no disponible', 'error');
+        }
+    }
+
+    compartirRuta(destino, distancia, tiempo, modo) {
+        const texto = `🗺️ Ruta a ${destino}:\n📏 Distancia: ${distancia}\n⏱️ Tiempo: ${tiempo}\n🚀 Modo: ${modo}`;
+        if (navigator.share) {
+            navigator.share({
+                title: `Ruta a ${destino}`,
+                text: texto,
+                url: window.location.href
+            });
+        } else {
+            navigator.clipboard.writeText(texto).then(() => {
+                mostrarNotificacion('📋 Ruta copiada al portapapeles', 'success');
+            }).catch(() => {
+                mostrarNotificacion('❌ No se pudo compartir la ruta', 'error');
+            });
+        }
+    }
+
+    iniciarRecorridoCaminando(destLat, destLng, nombreDestino) {
+        if (!navigator.geolocation) {
+            mostrarNotificacion('❌ Tu dispositivo no soporta geolocalización', 'error');
+            return;
+        }
+        if (!this.map) {
+            mostrarNotificacion('❌ El mapa no está disponible', 'error');
+            return;
+        }
+        mostrarNotificacion('🚶 Calculando recorrido a pie en el mapa...', 'info');
+        if (this.infoWindow) {
+            this.infoWindow.close();
+        }
+        
+        navigator.geolocation.getCurrentPosition(
+            async (position) => {
+                try {
+                    const origenLat = position.coords.latitude;
+                    const origenLng = position.coords.longitude;
+                    const origen = new google.maps.LatLng(origenLat, origenLng);
+                    const destino = new google.maps.LatLng(destLat, destLng);
+                    
+                    const directionsService = new google.maps.DirectionsService();
+                    if (this.currentDirectionsRenderer) {
+                        this.currentDirectionsRenderer.setMap(null);
+                    }
+                    this.currentDirectionsRenderer = new google.maps.DirectionsRenderer({
+                        suppressMarkers: false,
+                        suppressInfoWindows: true,
+                        polylineOptions: {
+                            strokeColor: '#25D366',
+                            strokeWeight: 5,
+                            strokeOpacity: 0.8
+                        },
+                        markerOptions: {
+                            icon: {
+                                url: 'data:image/svg+xml;charset=UTF-8,' + encodeURIComponent(`
+                                    <svg width="32" height="32" viewBox="0 0 32 32" xmlns="http://www.w3.org/2000/svg">
+                                        <circle cx="16" cy="16" r="12" fill="#25D366" stroke="#fff" stroke-width="2"/>
+                                        <text x="16" y="20" text-anchor="middle" fill="white" font-size="14">🚶</text>
+                                    </svg>
+                                `),
+                                scaledSize: new google.maps.Size(32, 32),
+                                anchor: new google.maps.Point(16, 16)
+                            }
+                        }
+                    });
+                    
+                    const request = {
+                        origin: origen,
+                        destination: destino,
+                        travelMode: google.maps.TravelMode.WALKING,
+                        unitSystem: google.maps.UnitSystem.METRIC,
+                        avoidHighways: false,
+                        avoidTolls: false
+                    };
+                    directionsService.route(request, (result, status) => {
+                        if (status === 'OK') {
+                            this.currentDirectionsRenderer.setMap(this.map);
+                            this.currentDirectionsRenderer.setDirections(result);
+                            
+                            this.map.fitBounds(result.routes[0].bounds);
+                            
+                            const route = result.routes[0];
+                            const leg = route.legs[0];
+                            
+                            this.mostrarInfoRutaEnMapa(leg, nombreDestino);
+                            
+                            mostrarNotificacion(`✅ Ruta a pie calculada: ${leg.distance.text} - ${leg.duration.text}`, 'success');
+                            
+                            console.log('✅ Ruta caminando mostrada en el mapa');
+                            
+                        } else {
+                            console.error('Error calculando ruta:', status);
+                            this.manejarErrorRutaEnMapa(status, destLat, destLng, nombreDestino);
+                        }
+                    });
+                    
+                } catch (error) {
+                    console.error('Error calculando ruta:', error);
+                    mostrarNotificacion('❌ Error calculando la ruta', 'error');
+                }
+            },
+            (error) => {
+                let mensaje = '❌ No se pudo obtener tu ubicación';
+                
+                switch (error.code) {
+                    case error.PERMISSION_DENIED:
+                        mensaje = '🔒 Permisos de ubicación denegados';
+                        break;
+                    case error.POSITION_UNAVAILABLE:
+                        mensaje = '📡 Ubicación no disponible';
+                        break;
+                    case error.TIMEOUT:
+                        mensaje = '⏱️ Tiempo de espera agotado';
+                        break;
+                }
+                
+                console.warn('Error de geolocalización para recorrido:', error);
+                mostrarNotificacion(mensaje, 'error');
+            },
+            {
+                enableHighAccuracy: true,
+                timeout: 8000,
+                maximumAge: 300000
+            }
+        );
+    }
+
+    mostrarInfoRutaEnMapa(leg, nombreDestino) {
+        const infoRuta = new google.maps.InfoWindow({
+            content: `
+                <div style="padding: 10px; min-width: 200px;">
+                    <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 8px;">
+                        <div style="font-size: 24px;">🚶</div>
+                        <div>
+                            <strong style="color: #25D366;">Ruta a pie a ${nombreDestino}</strong>
+                        </div>
+                    </div>
+                    
+                    <div style="display: flex; gap: 15px; margin-bottom: 10px;">
+                        <div style="text-align: center;">
+                            <div style="font-size: 12px; color: #666;">📏 Distancia</div>
+                            <div style="font-weight: bold; color: #25D366;">${leg.distance.text}</div>
+                        </div>
+                        <div style="text-align: center;">
+                            <div style="font-size: 12px; color: #666;">⏱️ Tiempo</div>
+                            <div style="font-weight: bold; color: #25D366;">${leg.duration.text}</div>
+                        </div>
+                    </div>
+                    
+                    <div style="display: flex; gap: 5px;">
+                        <button onclick="window.insDeporManager.limpiarRutaDelMapa()" 
+                                style="flex: 1; background: #dc3545; color: white; border: none; padding: 6px 10px; border-radius: 4px; font-size: 12px; cursor: pointer;">
+                            <i class="fas fa-times"></i> Limpiar ruta
+                        </button>
+                        <button onclick="window.insDeporManager.abrirEnGoogleMaps(${leg.end_location.lat()}, ${leg.end_location.lng()}, '${nombreDestino}')" 
+                                style="flex: 1; background: #4285f4; color: white; border: none; padding: 6px 10px; border-radius: 4px; font-size: 12px; cursor: pointer;">
+                            <i class="fab fa-google"></i> Google Maps
+                        </button>
+                    </div>
+                </div>
+            `,
+            position: leg.end_location,
+            pixelOffset: new google.maps.Size(0, -30)
+        });
+        
+        infoRuta.open(this.map);
+        
+        this.rutaInfoWindow = infoRuta;
+        
+        setTimeout(() => {
+            if (this.rutaInfoWindow) {
+                this.rutaInfoWindow.close();
+            }
+        }, 10000);
+    }
+
+    getModoGoogleMaps(modo) {
+        const modos = {
+            'driving': '0',    // Auto
+            'walking': '2'     // Caminando
+        };
+        return modos[modo] || '0';
+    }
+
     aplicarFiltros() {
         const nombreBusqueda = document.getElementById('busquedaNombre')?.value.toLowerCase() || '';
         const deporteSeleccionado = document.getElementById('filtroDeporte')?.value || '';
@@ -351,6 +1068,47 @@ class InsDeporManager {
             
             card.style.display = mostrar ? 'block' : 'none';
         });
+    }
+
+    limpiarRutaDelMapa() {
+        if (this.currentDirectionsRenderer) {
+            this.currentDirectionsRenderer.setMap(null);
+            this.currentDirectionsRenderer = null;
+        }
+        
+        if (this.rutaInfoWindow) {
+            this.rutaInfoWindow.close();
+            this.rutaInfoWindow = null;
+        }
+        
+        mostrarNotificacion('🗺️ Ruta eliminada del mapa', 'info');
+    }
+
+    manejarErrorRutaEnMapa(status, destLat, destLng, nombreDestino) {
+        let mensaje = 'No se pudo calcular la ruta';
+        
+        switch (status) {
+            case 'ZERO_RESULTS':
+                mensaje = 'No se encontró una ruta caminando disponible';
+                break;
+            case 'OVER_QUERY_LIMIT':
+                mensaje = 'Límite de consultas excedido';
+                break;
+            case 'REQUEST_DENIED':
+                mensaje = 'Solicitud denegada';
+                break;
+            case 'INVALID_REQUEST':
+                mensaje = 'Solicitud inválida';
+                break;
+        }
+        
+        mostrarNotificacion(`❌ ${mensaje}`, 'error');
+        setTimeout(() => {
+            const confirmar = confirm(`${mensaje}. ¿Quieres abrir Google Maps en su lugar?`);
+            if (confirmar) {
+                this.abrirEnGoogleMaps(destLat, destLng, nombreDestino);
+            }
+        }, 2000);
     }
     
     mostrarInstalacionesCercanas() {
@@ -549,9 +1307,7 @@ function initMap() {
     }
 }
 
-// ✅ FUNCIÓN PARA MANEJAR CLIC EN BOTONES DE ACCIÓN
 document.addEventListener('DOMContentLoaded', function() {
-    // ✅ AGREGAR EVENT LISTENERS PARA BOTONES DE ACCIÓN
     document.addEventListener('click', function(e) {
         // Botón de horarios
         if (e.target.closest('.btn-horarios')) {
@@ -559,8 +1315,6 @@ document.addEventListener('DOMContentLoaded', function() {
             const instalacionId = btn.getAttribute('data-id');
             toggleHorarios(instalacionId);
         }
-        
-        // Botón de cronograma
         if (e.target.closest('.btn-cronograma')) {
             const btn = e.target.closest('.btn-cronograma');
             const instalacionId = btn.getAttribute('data-id');
@@ -568,8 +1322,6 @@ document.addEventListener('DOMContentLoaded', function() {
                 window.insDeporManager.verCronograma(instalacionId);
             }
         }
-        
-        // Botón de mapa
         if (e.target.closest('.btn-mapa')) {
             const btn = e.target.closest('.btn-mapa');
             const lat = parseFloat(btn.getAttribute('data-lat'));
@@ -577,31 +1329,35 @@ document.addEventListener('DOMContentLoaded', function() {
             const nombre = btn.getAttribute('data-nombre');
             centrarMapaEnInstalacion(lat, lng, nombre);
         }
-        
-        // Botón de comentarios
         if (e.target.closest('.btn-comentarios')) {
             const btn = e.target.closest('.btn-comentarios');
             const instalacionId = btn.getAttribute('data-id');
             mostrarComentarios(instalacionId);
         }
-        
-        // Botón de imágenes
         if (e.target.closest('.btn-imagenes')) {
             const btn = e.target.closest('.btn-imagenes');
             const instalacionId = btn.getAttribute('data-id');
             mostrarGaleria(instalacionId);
         }
-        
-        // Botón de reservar
         if (e.target.closest('.btn-reservar')) {
             const btn = e.target.closest('.btn-reservar');
             const instalacionId = btn.getAttribute('data-id');
             iniciarReserva(instalacionId);
         }
+        if (e.target.closest('.btn-rutas')) {
+            const btn = e.target.closest('.btn-rutas');
+            const instalacionId = btn.getAttribute('data-id');
+            const lat = parseFloat(btn.getAttribute('data-lat'));
+            const lng = parseFloat(btn.getAttribute('data-lng'));
+            const nombre = btn.getAttribute('data-nombre');
+            
+            if (window.insDeporManager) {
+                window.insDeporManager.mostrarOpcionesRuta(instalacionId, nombre, lat, lng);
+            }
+        }
     });
 });
 
-// ✅ FUNCIÓN PARA MOSTRAR/OCULTAR HORARIOS
 function toggleHorarios(instalacionId) {
     const horariosDiv = document.getElementById(`horarios-${instalacionId}`);
     const btn = document.querySelector(`[data-id="${instalacionId}"].btn-horarios`);
@@ -617,7 +1373,6 @@ function toggleHorarios(instalacionId) {
     }
 }
 
-// ✅ FUNCIÓN PARA CENTRAR MAPA EN INSTALACIÓN
 function centrarMapaEnInstalacion(lat, lng, nombre) {
     if (window.insDeporManager && window.insDeporManager.map) {
         const position = new google.maps.LatLng(lat, lng);
@@ -637,7 +1392,6 @@ function centrarMapaEnInstalacion(lat, lng, nombre) {
     }
 }
 
-// ✅ FUNCIÓN PARA INICIAR RESERVA
 function iniciarReserva(instalacionId) {
     mostrarNotificacion('🚀 Redirigiendo a reservas...', 'info');
     setTimeout(() => {
@@ -645,7 +1399,6 @@ function iniciarReserva(instalacionId) {
     }, 1000);
 }
 
-// ✅ FUNCIÓN PARA MOSTRAR NOTIFICACIONES
 function mostrarNotificacion(mensaje, tipo = 'info') {
     // Crear contenedor si no existe
     let container = document.getElementById('notificaciones-container');
@@ -696,7 +1449,6 @@ function mostrarNotificacion(mensaje, tipo = 'info') {
     
     container.appendChild(notificacion);
     
-    // Remover después de 3 segundos
     setTimeout(() => {
         if (notificacion.parentNode) {
             notificacion.style.animation = 'slideOutRight 0.3s ease';
@@ -709,7 +1461,6 @@ function mostrarNotificacion(mensaje, tipo = 'info') {
     }, 3000);
 }
 
-// ✅ AGREGAR ANIMACIONES CSS
 const style = document.createElement('style');
 style.textContent = `
     @keyframes slideInRight {

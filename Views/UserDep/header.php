@@ -1,5 +1,4 @@
 <?php
-// header.php - Cabecera reutilizable para todas las páginas del dashboard
 ?>
 <!DOCTYPE html>
 <html lang="es">
